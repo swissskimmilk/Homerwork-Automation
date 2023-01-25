@@ -19,7 +19,7 @@ class ImageProcessor:
         self.image = self.image.filter(ImageFilter.Kernel((3, 3), gaussianK, 1, 0))
 
     def lapAdj(self):
-        self.image = self.image.filter(ImageFilter.Kernel((3, 3), lapAdjK, 0.5, 0))
+        self.image = self.image.filter(ImageFilter.Kernel((3, 3), lapAdjK, 0.25, 0))
 
     def lapAll(self):
         self.image = self.image.filter(ImageFilter.Kernel((3, 3), lapAllK, 1, 0))

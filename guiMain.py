@@ -5,7 +5,7 @@ import os
 
 from ImageProcessor import *
 
-MAX_DIMENSION = 750
+MAX_DIMENSION = 500
 treatments = ["BW", "Gaussian", "Laplacian Adj", "Laplacian All"]
 
 def formatImage(image):
