@@ -8,6 +8,7 @@ from ImageProcessor import *
 MAX_DIMENSION = 500
 treatments = ["BW", "Gaussian", "Laplacian Adj", "Laplacian All"]
 
+
 # Resizes the image and puts it in the right format for Tkinter. dwabtit
 def formatImage(image):
     width, height = image.size
@@ -33,17 +34,26 @@ def submit():
     imageProcessor = ImageProcessor(image)
 
     if treatment == treatments[0]:
-        imageProcessor.greyscale()
+        # imageProcessor.greyscale()
+        imageProcessor.delPix()
+        # imageProcessor.roundGrey()
     elif treatment == treatments[1]:
         imageProcessor.gaussianBlur()
     elif treatment == treatments[2]:
         imageProcessor.greyscale()
         imageProcessor.gaussianBlur()
+        # imageProcessor.gaussianBlur()
+        imageProcessor.round(3)
         imageProcessor.lapAdj()
+        imageProcessor.delPix()
     elif treatment == treatments[3]:
         imageProcessor.greyscale()
         imageProcessor.gaussianBlur()
-        imageProcessor.lapAll()
+        imageProcessor.gaussianBlur()
+        imageProcessor.round(3)
+        imageProcessor.lapAdj()
+        imageProcessor.delPix()
+        imageProcessor.toGCode()
 
     # temp
     imageProcessor.image.save("Output/tempoutput.png")

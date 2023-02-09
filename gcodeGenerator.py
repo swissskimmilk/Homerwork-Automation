@@ -4,7 +4,7 @@ import PIL
 
 MINIMUM_VALUE = 60
 
-imageProcessor = ImageProcessor("Images/MJ_SunsetRuins.jpg")
+imageProcessor = ImageProcessor("Images/MJ_Planet.png")
 imageProcessor.greyscale()
 imageProcessor.gaussianBlur()
 imageProcessor.lapAdj()
@@ -26,8 +26,7 @@ def isZeros(matrix):
 # need a shitty temporary fix for skipping the starting pixel the first time
 # this is probably causing a big chunk of the problems but idfk
 # main thing is gaps in pixels, i assume it's this and some other issue causing it
-def adjSearch(x, y, pixel, width, height):
-
+def adjSearch(y, x, pixel, width, height):
     adjMatrix = numpy.zeros((3, 3))
     if (
         x > 0
