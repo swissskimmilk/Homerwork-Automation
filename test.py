@@ -2,7 +2,9 @@ import turtle
 
 t = turtle.Turtle()
 t.speed(0)
+t.ht()
 t.up()
+turtle.delay(0)
 turtle.screensize(1024, 1024)
 
 with open("Output/codering.txt") as txt:

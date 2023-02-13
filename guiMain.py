@@ -38,19 +38,21 @@ def submit():
         imageProcessor.delPix()
         # imageProcessor.roundGrey()
     elif treatment == treatments[1]:
+        imageProcessor.greyscale()
         imageProcessor.gaussianBlur()
+        imageProcessor.lapAdj()
     elif treatment == treatments[2]:
         imageProcessor.greyscale()
         imageProcessor.gaussianBlur()
-        # imageProcessor.gaussianBlur()
-        imageProcessor.round(3)
+        imageProcessor.gaussianBlur()
+        imageProcessor.round(4)
         imageProcessor.lapAdj()
         imageProcessor.delPix()
     elif treatment == treatments[3]:
         imageProcessor.greyscale()
         imageProcessor.gaussianBlur()
         imageProcessor.gaussianBlur()
-        imageProcessor.round(3)
+        imageProcessor.round(4)
         imageProcessor.lapAdj()
         imageProcessor.delPix()
         imageProcessor.toGCode()
@@ -101,7 +103,8 @@ treatmentMenu = ttk.OptionMenu(
     style="Accent.TOptionMenu",
 )
 treatmentMenu.grid(column=1, row=2, padx=5, pady=5)
-
+# textbox = ttk.Text(window)
+# textbox.grid(column=2, row=2, padx=5, pady=5)
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
 submitButton.grid(column=3, row=2, padx=5, pady=5)
 
