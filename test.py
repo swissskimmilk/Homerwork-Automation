@@ -7,7 +7,7 @@ t.up()
 turtle.delay(0)
 turtle.screensize(1024, 1024)
 
-with open("Output/codering.txt") as txt:
+with open("Output/turtle.txt") as txt:
     a = txt.readlines()
     # delay = False
     for i in a:

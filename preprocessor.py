@@ -1,17 +1,15 @@
+# Depreciated. Remove later.
+
 from ImageProcessor import *
 import numpy
 import PIL
-import sys 
+import sys
 
 sys.setrecursionlimit(5000)
 
-<<<<<<< HEAD:gcodeGenerator.py
-imageProcessor = ImageProcessor("Images/MJ_Planet.png")
-=======
 MINIMUM_VALUE = 40
 
 imageProcessor = ImageProcessor("Images/MJ_Bird.png")
->>>>>>> 39094845071e6a52a21e1522d2924b66536633db:preprocessor.py
 imageProcessor.greyscale()
 imageProcessor.gaussianBlur()
 imageProcessor.lapAdj()
