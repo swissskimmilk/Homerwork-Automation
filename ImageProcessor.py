@@ -12,6 +12,8 @@ gaussianK = (1 / 16, 2 / 16, 1 / 16, 2 / 16, 4 / 16, 2 / 16, 1 / 16, 2 / 16, 1 /
 lapAdjK = (0, 1, 0, 1, -4, 1, 0, 1, 0)
 lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
+aidanGoesToSleep = []
+
 
 class ImageProcessor:
     def __init__(self, imageIn):
@@ -143,6 +145,7 @@ class ImageProcessor:
                 tog = False
 
             if maxInd == -1:
+                aidanGoesToSleep.append((-1, -1))
                 return "stop\n"
             newX = x + maxInd % 3 - 1
             newY = y + maxInd // 3 - 1
@@ -151,12 +154,15 @@ class ImageProcessor:
             # print(maxInd)
             # print(x, y)
             # print(newX, newY)
-            return f"{newX},{newY}\n" + lineSearch(
+            aidanGoesToSleep.append((newX, newY))
+            return f"g1 x{newX} y{newY}\n" + lineSearch(
                 newX, newY, maxInd % 3 - 1, maxInd // 3 - 1
             )
 
         for x in range(width):
             for y in range(height):
                 if img[x, y] == 255:
-                    output.write(f"{x},{y}\n" + lineSearch(x, y, 0, 0))
+                    output.write(f"g1 x{x} y{y}\n" + lineSearch(x, y, 0, 0))
+                    aidanGoesToSleep.append((x, y))
         output.write("end")
+        print(aidanGoesToSleep)
