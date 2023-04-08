@@ -9,9 +9,14 @@ gaussianK = (1 / 16, 2 / 16, 1 / 16, 2 / 16, 4 / 16, 2 / 16, 1 / 16, 2 / 16, 1 /
 lapAdjK = (0, 1, 0, 1, -4, 1, 0, 1, 0)
 lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
-RETRACT_HEIGHT = 15
+RETRACT_HEIGHT = 10
 OPERATING_HEIGHT = 5
 FEEDRATE = 1000
+
+# PAPER_WIDTH = 209.55
+# PAPER_HEIGHT = 273.05
+PAPER_WIDTH = 235
+PAPER_HEIGHT = 235
 
 
 class ImageProcessor:
@@ -162,7 +167,12 @@ class ImageProcessor:
             newY = y + maxInd // 3 - 1
             img[newX, newY] = 0
 
-            recur = lineSearch(newX, newY, maxInd % 3 - 1, maxInd // 3 - 1)
+            recur = lineSearch(
+                newX,
+                newY,
+                (biasX) * 1 + (maxInd % 3 - 1) * 1,
+                (biasY) * 1 + (maxInd // 3 - 1) * 1,
+            )
             if recur != None:
                 currArr = [(newX, newY)]
                 currArr.extend(recur)
@@ -176,14 +186,26 @@ class ImageProcessor:
             for y in range(height):
                 if img[x, y] != 0:
                     linePixels = lineSearch(x, y, 0, 0)
-                    turtleOutput.write(f"{x},{y}\n")
-                    gcodeOutput.write(f"G1 X{x} Y{y} Z{RETRACT_HEIGHT}\n")
-                    gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
-                    if linePixels != None:
-                        for pixel in linePixels:
-                            turtleOutput.write(f"{pixel[0]},{pixel[1]}\n")
-                            gcodeOutput.write(f"G1 X{pixel[0]} Y{pixel[1]}\n")
+
+                    if linePixels != None and len(linePixels) > 3:
+                        turtleOutput.write(f"{x},{y}\n")
+                        gcodeOutput.write(
+                            f"G1 X{x/width * PAPER_WIDTH} Y{y/height * PAPER_HEIGHT} Z{RETRACT_HEIGHT}\n"
+                        )
+                        # gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
+                        arrLen = len(linePixels)
+                        # print(linePixels)
+                        bx = 0
+                        by = 0
+                        for i in range(arrLen):
+                            if False or i % 3 == 0:
+                                turtleOutput.write(
+                                    f"{linePixels[i][0]},{linePixels[i][1]}\n"
+                                )
+                                gcodeOutput.write(
+                                    f"G1 X{linePixels[i][0]/width * PAPER_WIDTH} Y{linePixels[i][1]/height * PAPER_HEIGHT} Z{OPERATING_HEIGHT}\n"
+                                )
                     turtleOutput.write("stop\n")
-                    gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
+                    # gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")

@@ -15,6 +15,7 @@ treatments = [
     "Lap Adj to GCode",
 ]
 
+
 # Resizes the image and puts it in the right format for Tkinter. dwabtit
 def formatImage(image):
     width, height = image.size
@@ -87,8 +88,8 @@ def submit():
         imageProcessor.delPix()
     elif treatment == treatments[4]:
         imageProcessor.greyscale()
-        imageProcessor.gaussianBlur()
-        imageProcessor.gaussianBlur()
+        # imageProcessor.gaussianBlur()
+        # imageProcessor.gaussianBlur()
         imageProcessor.roundColors(roundness)
         imageProcessor.lapAdj()
         imageProcessor.delPix()
