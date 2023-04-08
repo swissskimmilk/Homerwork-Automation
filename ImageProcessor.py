@@ -1,3 +1,5 @@
+# where most of the work is done
+
 from PIL import Image, ImageFilter
 import sys
 

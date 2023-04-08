@@ -1,3 +1,5 @@
+# this is main, run this
+
 import tkinter as tk
 import tkinter.ttk as ttk
 from PIL import ImageTk, Image
