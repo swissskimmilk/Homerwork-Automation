@@ -54,39 +54,45 @@ class ImageProcessor:
                     img[x, y] = tuple(pixel)
 
     # Deletes pixels that are not touching other pixels
-    # Image must be in greyscale (I think)
+    # Image must be in black and white
     def delPix(self):
         img = self.image.load()
         width = self.image.width
         height = self.image.height
 
-        # Checks to see if the adjacent pixels
+        # loops through all pixels...
         for x in range(width):
             for y in range(height):
-                tog = True
+
+                isLonePixel = True
+
+                # if there is a pixel there...
                 if img[x, y] != 0:
-                    if tog and x > 0 and y > 0 and img[x - 1, y - 1] != 0:
-                        tog = False
-                    if tog and y > 0 and img[x, y - 1] != 0:
-                        tog = False
-                    if tog and x < width - 1 and y > 0 and img[x + 1, y - 1] != 0:
-                        tog = False
-                    if tog and x > 0 and img[x - 1, y] != 0:
-                        tog = False
-                    if tog and x < width - 1 and img[x + 1, y] != 0:
-                        tog = False
-                    if tog and x > 0 and y < height - 1 and img[x - 1, y + 1] != 0:
-                        tog = False
-                    if tog and y < height - 1 and img[x, y + 1] != 0:
-                        tog = False
+                    # check all nearby spots to see if there are any touching pixels
+                    if isLonePixel and x > 0 and y > 0 and img[x - 1, y - 1] != 0:
+                        isLonePixel = False
+                    if isLonePixel and y > 0 and img[x, y - 1] != 0:
+                        isLonePixel = False
+                    if isLonePixel and x < width - 1 and y > 0 and img[x + 1, y - 1] != 0:
+                        isLonePixel = False
+                    if isLonePixel and x > 0 and img[x - 1, y] != 0:
+                        isLonePixel = False
+                    if isLonePixel and x < width - 1 and img[x + 1, y] != 0:
+                        isLonePixel = False
+                    if isLonePixel and x > 0 and y < height - 1 and img[x - 1, y + 1] != 0:
+                        isLonePixel = False
+                    if isLonePixel and y < height - 1 and img[x, y + 1] != 0:
+                        isLonePixel = False
                     if (
-                        tog
+                        isLonePixel
                         and x < width - 1
                         and y < height - 1
                         and img[x + 1, y + 1] != 0
                     ):
-                        tog = False
-                    if tog:
+                        isLonePixel = False
+
+                    # if pixel is not touching any other, delete pixel
+                    if isLonePixel:
                         img[x, y] = 0
 
     def toGCode(self):
