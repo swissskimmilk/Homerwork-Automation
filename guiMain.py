@@ -69,14 +69,14 @@ def submit():
     imageProcessor = ImageProcessor(image)
 
     roundness = int(textbox.get("1.0", tk.END))
+    blurTimes = 2
+    minChainLength = 12
 
     # all the different sorts of treatments
     def BW():
         imageProcessor.greyscale()
     def Gaussian():
         BW()
-        # note: move this variable "blurTimes" somewhere else?
-        blurTimes = 2
         for i in range(blurTimes):
             imageProcessor.gaussianBlur()
     def Laplacian_Adj():
@@ -94,8 +94,6 @@ def submit():
         imageProcessor.toGCode()
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
-        # note: move "minChainLength" variable somewhere else?
-        minChainLength = 10
         imageProcessor.purge(minChainLength)
 
     if treatment == treatments[0]:
