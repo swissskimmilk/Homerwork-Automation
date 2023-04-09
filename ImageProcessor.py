@@ -2,6 +2,7 @@
 
 from PIL import Image, ImageFilter
 import sys
+import math
 
 # :trollface:
 sys.setrecursionlimit(9999)
@@ -59,6 +60,97 @@ class ImageProcessor:
                 else:
                     pixel = [round(i / stepMult) * stepMult for i in pixel]
                     img[x, y] = tuple(pixel)
+    # like roundColors, but more balanced;
+    # trys to make sure every sub-range of colors has similar pixel count
+    def balancedRoundColors(self, numberOfSubranges):
+        img = self.image.load()
+        width = self.image.width
+        height = self.image.height
+
+        # first tally how many times a color shows up; its index is its color value
+        colorCount = []
+        for i in range(256):
+            colorCount.append(0)
+        for x in range(width):
+            for y in range(height):
+                pixel = img[x, y]
+                colorCount[pixel] += 1
+
+        # print(colorCount)
+
+        # number of subranges is the number of colors there can be;
+        # more subranges = less rounding/more colors, & vice-versa
+        # this is for dividing into subranges; subrangeEnd is the limit and subrangeEnd-1 is the last term
+        subrangeEnds = []
+        # (totalPixels)/numberOfSubranges, rounded up
+        pixelsInEachSubRange = math.ceil( (width * height) / numberOfSubranges )
+        thisSubrangeSize = 0
+        residue = 0
+        # tries to divide the range of colors/colorCount into many subranges with similar numbers of pixels
+        for thisIndex in range(len(colorCount)):
+            numberOfThisColor = colorCount[thisIndex]
+
+            # once this subrange *is about to be* filled up...
+            if ( (thisSubrangeSize+numberOfThisColor) >= pixelsInEachSubRange):
+                # see if it is better to under-include or over-include;
+                # residue says if last subrange under-induded or over-included;
+                # if last subrange under-included, then this one probably should over-include and vice-versa
+
+                # includeResidue is how off it will be if we decide to include the last number
+                includeResidue = thisSubrangeSize+numberOfThisColor+residue-pixelsInEachSubRange
+                # excludeResidue is how off it will be if we decide to NOT include the last number
+                excludeResidue = thisSubrangeSize-numberOfThisColor+residue-pixelsInEachSubRange
+                if( abs(excludeResidue) <= abs(includeResidue) ):
+                    # not including is better than including; but this will result in under-including
+                    # roll over residue for next calculation
+                    residue = excludeResidue
+                    # note the end of the last subrange...
+                    subrangeEnds.append(thisIndex)
+                else:
+                    # including is better than not including; but this will result in over-including
+                    # roll over residue for next calculation
+                    residue = includeResidue
+                    # note the end of the last subrange...
+                    subrangeEnds.append(thisIndex+1)
+                # then start a new subrange
+                thisSubrangeSize = 0
+            else:
+                # otherwise, keep filling
+                thisSubrangeSize += numberOfThisColor
+        # add a final end (if it isn't there already) and a beginning
+        if len(subrangeEnds) != numberOfSubranges:
+            subrangeEnds.append(256)
+        subrangeEnds.insert(0, 0)
+
+        # print(subrangeEnds)
+
+        # take a weighted average of each subrange
+        # this is used for averaging the colors in each subrange
+        subrangeAverages = []
+        for i in range(1, len(subrangeEnds)):
+            thisSubrangeColorSum = 0
+            thisSubrangePixelCount = 0
+            for j in range(subrangeEnds[i-1], subrangeEnds[i]):
+                thisSubrangeColorSum += colorCount[j] * j
+                thisSubrangePixelCount += colorCount[j]
+            subrangeAverages.append( math.ceil(thisSubrangeColorSum/thisSubrangePixelCount) )
+            # print(thisSubrangePixelCount)
+            
+        # print(subrangeAverages)
+
+        # now we map each color to its subrange average
+        subrangeTable = []
+        for i in range(1, len(subrangeEnds)):
+            for j in range(subrangeEnds[i-1], subrangeEnds[i]):
+                subrangeTable.append(subrangeAverages[i-1])
+        
+        # print(subrangeTable)
+
+        # set each pixel in the subranges to the average of its subrange
+        for x in range(width):
+            for y in range(height):
+                pixel = img[x, y]
+                img[x, y] = subrangeTable[pixel]
 
     # Deletes pixels that are not touching other pixels
     # Image must be in black and white
@@ -224,42 +316,64 @@ class ImageProcessor:
 
 
     # this is to be used AFTER the turtle/gcode files have already been written
-    # note: only does turtle for now
-    def purge(self, minChainLength):
+    # just for turtle
+    def turtlePurge(self, minChainLength):
         turtleRead = open("Output/turtle.txt", "r")
-        gcodeRead = open("Output/drawing.gcode", "r")
-        
         # a chain is the number of commands between two stops
         # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
         currentChain = []
         toWrite = []
         for turtleCommand in turtleRead.readlines():
-            turtleCommand = turtleCommand.strip("\n")
+            strippedTurtleCommand = turtleCommand.strip("\n")
             
-            if (turtleCommand != "stop") and (turtleCommand != "end"):
+            if (strippedTurtleCommand != "stop") and (strippedTurtleCommand != "end"):
                 # when we find a command, grow the chain
-                currentChain.append(turtleCommand + "\n")
+                currentChain.append(turtleCommand)
             else:
                 # end of command chain;
                 # if the last chain was large enough, note it down to write later;
                 # if it was too small, then forget about it
                 if len(currentChain) >= minChainLength:
-                    currentChain.append("stop\n")
+                    currentChain.append(turtleCommand)
                     toWrite = toWrite + currentChain
                 # finally, start a new chain
                 currentChain = []
         toWrite.append("end")
-
         turtleRead.close()
-        gcodeRead.close()
-
 
         # wipe and write
         turtleWrite = open("Output/turtle.txt", "w")
-        gcodeWrite = open("Output/drawing.gcode", "w")
-
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
-
         turtleWrite.close()
+    # just for gcode
+    def gcodePurge(self, minChainLength):
+        gcodeRead = open("Output/drawing.gcode", "r")
+        # a chain is the number of commands between two stops
+        # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
+        currentChain = []
+        toWrite = []
+        for gcodeCommand in gcodeRead.readlines():
+            gcodeCommandSet = (gcodeCommand.strip("\n")).split(" ")
+            
+            # last part of command set is z; if z is retracted height then it is retracted/stopped there
+            if ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ) and ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ):
+                # when we find a command, grow the chain
+                currentChain.append(gcodeCommand)
+            else:
+                # end of command chain;
+                # if the last chain was large enough, note it down to write later;
+                # if it was too small, then forget about it
+                if len(currentChain) >= minChainLength:
+                    currentChain.append(gcodeCommand)
+                    toWrite = toWrite + currentChain
+                # finally, start a new chain
+                currentChain = []
+        toWrite.append("G1 X0 Y0")
+        gcodeRead.close()
+
+        # wipe and write
+        gcodeWrite = open("Output/drawing.gcode", "w")
+        for gcodeCommandToWrite in toWrite:
+            gcodeWrite.write(gcodeCommandToWrite)
         gcodeWrite.close()

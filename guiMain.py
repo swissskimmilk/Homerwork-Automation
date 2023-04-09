@@ -70,7 +70,7 @@ def submit():
 
     roundness = int(textbox.get("1.0", tk.END))
     blurTimes = 2
-    minChainLength = 12
+    minChainLength = 20
 
     # all the different sorts of treatments
     def BW():
@@ -81,7 +81,11 @@ def submit():
             imageProcessor.gaussianBlur()
     def Laplacian_Adj():
         Gaussian()
-        imageProcessor.roundColors(roundness)
+
+        #note: you can use either rounding function
+        imageProcessor.balancedRoundColors(roundness)
+        #imageProcessor.roundColors(roundness)
+
         imageProcessor.lapAdj()
         imageProcessor.delPix()
     def Laplacian_All():
@@ -94,7 +98,8 @@ def submit():
         imageProcessor.toGCode()
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
-        imageProcessor.purge(minChainLength)
+        imageProcessor.turtlePurge(minChainLength)
+        imageProcessor.gcodePurge(minChainLength)
 
     if treatment == treatments[0]:
         BW()
