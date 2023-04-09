@@ -48,14 +48,14 @@ def runTurtle():
 
     t.clear()
     with open("Output/turtle.txt") as txt:
-        a = txt.readlines()
+        allCommands = txt.readlines()
         # delay = False
-        for i in a:
-            i = i.strip()
-            if i == "stop" or i == "end":
+        for command in allCommands:
+            command = command.strip()
+            if command == "stop" or command == "end":
                 t.up()
             else:
-                x, y = map(int, i.split(","))
+                x, y = map(int, command.split(","))
                 t.goto(x - 512, -(y - 512))
                 t.down()
     input()

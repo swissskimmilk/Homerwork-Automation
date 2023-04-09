@@ -106,8 +106,6 @@ class ImageProcessor:
         img = self.image.copy().load()
         width = self.image.width
         height = self.image.height
-        turtleOutput = open("Output/turtle.txt", "w")
-        gcodeOutput = open("Output/drawing.gcode", "w")
 
         # Magically finds lines and returns as a list of tuples
         # Todo: remove tog?
@@ -188,6 +186,9 @@ class ImageProcessor:
             else:
                 return [(newX, newY)]
 
+        turtleOutput = open("Output/turtle.txt", "w")
+        gcodeOutput = open("Output/drawing.gcode", "w")
+        
         gcodeOutput.write("G28\n")
         gcodeOutput.write(f"G1 F{FEEDRATE}\n")
         for x in range(width):
