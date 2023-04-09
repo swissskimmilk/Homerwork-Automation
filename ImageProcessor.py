@@ -217,3 +217,48 @@ class ImageProcessor:
                     # gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")
+
+        turtleOutput.close()
+        gcodeOutput.close()
+
+
+    # this is to be used AFTER the turtle/gcode files have already been written
+    # note: only does turtle for now
+    def purge(self, minChainLength):
+        turtleRead = open("Output/turtle.txt", "r")
+        gcodeRead = open("Output/drawing.gcode", "r")
+        
+        # a chain is the number of commands between two stops
+        # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
+        currentChain = []
+        toWrite = []
+        for turtleCommand in turtleRead.readlines():
+            turtleCommand = turtleCommand.strip("\n")
+            
+            if (turtleCommand != "stop") and (turtleCommand != "end"):
+                # when we find a command, grow the chain
+                currentChain.append(turtleCommand + "\n")
+            else:
+                # end of command chain;
+                # if the last chain was large enough, note it down to write later;
+                # if it was too small, then forget about it
+                if len(currentChain) >= minChainLength:
+                    currentChain.append("stop\n")
+                    toWrite = toWrite + currentChain
+                # finally, start a new chain
+                currentChain = []
+        toWrite.append("end")
+
+        turtleRead.close()
+        gcodeRead.close()
+
+
+        # wipe and write
+        turtleWrite = open("Output/turtle.txt", "w")
+        gcodeWrite = open("Output/drawing.gcode", "w")
+
+        for turtleCommandToWrite in toWrite:
+            turtleWrite.write(turtleCommandToWrite)
+
+        turtleWrite.close()
+        gcodeWrite.close()

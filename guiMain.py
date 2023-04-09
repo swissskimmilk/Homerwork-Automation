@@ -15,6 +15,7 @@ treatments = [
     "Laplacian Adj",
     "Laplacian All",
     "Lap Adj to GCode",
+    "Lap Adj to GCode plus purge",
 ]
 
 
@@ -69,33 +70,47 @@ def submit():
 
     roundness = int(textbox.get("1.0", tk.END))
 
-    if treatment == treatments[0]:
+    # all the different sorts of treatments
+    def BW():
         imageProcessor.greyscale()
-    elif treatment == treatments[1]:
-        imageProcessor.greyscale()
-        imageProcessor.gaussianBlur()
-    elif treatment == treatments[2]:
-        imageProcessor.greyscale()
-        imageProcessor.gaussianBlur()
-        imageProcessor.gaussianBlur()
+    def Gaussian():
+        BW()
+        # note: move this variable "blurTimes" somewhere else?
+        blurTimes = 2
+        for i in range(blurTimes):
+            imageProcessor.gaussianBlur()
+    def Laplacian_Adj():
+        Gaussian()
         imageProcessor.roundColors(roundness)
         imageProcessor.lapAdj()
         imageProcessor.delPix()
-    elif treatment == treatments[3]:
-        imageProcessor.greyscale()
-        imageProcessor.gaussianBlur()
-        imageProcessor.gaussianBlur()
+    def Laplacian_All():
+        Gaussian()
         imageProcessor.roundColors(roundness)
         imageProcessor.lapAll()
         imageProcessor.delPix()
-    elif treatment == treatments[4]:
-        imageProcessor.greyscale()
-        # imageProcessor.gaussianBlur()
-        # imageProcessor.gaussianBlur()
-        imageProcessor.roundColors(roundness)
-        imageProcessor.lapAdj()
-        imageProcessor.delPix()
+    def Lap_Adj_to_GCode():
+        Laplacian_Adj()
         imageProcessor.toGCode()
+    def Lap_Adj_to_GCode_plus_purge():
+        Lap_Adj_to_GCode()
+        # note: move "minChainLength" variable somewhere else?
+        minChainLength = 10
+        imageProcessor.purge(minChainLength)
+
+    if treatment == treatments[0]:
+        BW()
+    elif treatment == treatments[1]:
+        Gaussian()
+    elif treatment == treatments[2]:
+        Laplacian_Adj()
+    elif treatment == treatments[3]:
+        Laplacian_All()
+    elif treatment == treatments[4]:
+        Lap_Adj_to_GCode()
+    elif treatment == treatments[5]:
+        Lap_Adj_to_GCode_plus_purge()
+
 
     # temp
     imageProcessor.image.save("Output/tempoutput.png")
@@ -104,7 +119,7 @@ def submit():
     outputImageLabel.config(image=outputImage)
     outputImageLabel.image = outputImage
 
-    if treatment == treatments[4]:
+    if (treatment == treatments[4]) or (treatment == treatments[5]):
         runTurtle()
 
 
