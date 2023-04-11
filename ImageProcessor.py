@@ -379,6 +379,7 @@ class ImageProcessor:
         gcodeWrite.close()
 
     
+    # note: THIS MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
     # joins smaller lines into larger lines
     # maxLeeway is the maximum number of unaligned pixels that can be read over before the larger line is cut
     # example: if there are two smaller lines that would make a larger line when connected but have a gap in between,
@@ -387,4 +388,51 @@ class ImageProcessor:
     # (and not just another gap to be skipped over again)
     def lineJoiner(self, maxLeeway):
         # note: ONLY WORKS WITH GCODE FOR NOW
-        print("line joiner")
+        # note: only joins vertical and horizontal lines for now
+        # note: leeway doesn't work for now
+
+        gcodeRead = open("Output/drawing.gcode", "r")
+
+        # note: IGNORE THIS FOR NOW
+        # current number of pixels that dont match up;
+        # we can wait until this number is up to maxLeeway instead of immediately starting a new chain...
+        # ...in order to give a bit of leeway
+        # misalignedPixels = 0
+
+        toWrite = []
+        theChain = []
+        # goes through and looks for line chains (same x or y)
+        for thisGcodeCommand in gcodeRead.readlines():
+            thisGcodeCommandSet = (thisGcodeCommand.strip("\n")).split(" ")
+
+            # if theres nothing in the chain yet then start one
+            if len(theChain) == 0:
+                theChain.append(thisGcodeCommand)
+            else:
+                # if there is already is some points in the chain, then see if you can start a line
+                # example: line means this point has the same x as last point, which has last x as last point, etc. (same with y)
+                previousCommandSet = ((theChain[-1]).strip("\n")).split(" ")
+                if (previousCommandSet[1] == thisGcodeCommandSet[1]):
+                    # same x, start of vertical line
+                    theChain.append(thisGcodeCommand)
+                elif (previousCommandSet[2] == thisGcodeCommandSet[2]):
+                    # same y, start of horizontal line
+                    theChain.append(thisGcodeCommand)
+                else:
+                    # neither same x nor y; diagonal
+                    # end line at previous point, start a new one
+                    # if line only had one point then note only one point
+                    if  len(theChain)==1:
+                        toWrite.append(theChain[0])
+                    else:
+                        toWrite.append(theChain[0])
+                    toWrite.append(theChain[-1])
+                    theChain = []
+
+        gcodeRead.close()
+
+        # wipe and write
+        gcodeWrite = open("Output/drawing.gcode", "w")
+        for gcodeCommandToWrite in toWrite:
+            gcodeWrite.write(gcodeCommandToWrite)
+        gcodeWrite.close()
