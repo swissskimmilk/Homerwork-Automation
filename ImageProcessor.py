@@ -377,3 +377,14 @@ class ImageProcessor:
         for gcodeCommandToWrite in toWrite:
             gcodeWrite.write(gcodeCommandToWrite)
         gcodeWrite.close()
+
+    
+    # joins smaller lines into larger lines
+    # maxLeeway is the maximum number of unaligned pixels that can be read over before the larger line is cut
+    # example: if there are two smaller lines that would make a larger line when connected but have a gap in between,
+    # maxLeeway would allow the function to skip over that gap and connect them anyways
+    # also the max distance the function will keep going after the end of a line to make sure it really is the end
+    # (and not just another gap to be skipped over again)
+    def lineJoiner(self, maxLeeway):
+        # note: ONLY WORKS WITH GCODE FOR NOW
+        print("line joiner")
