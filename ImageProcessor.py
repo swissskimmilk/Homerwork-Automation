@@ -76,7 +76,7 @@ class ImageProcessor:
                 pixel = img[x, y]
                 colorCount[pixel] += 1
 
-        # print(colorCount)
+        #print("Color count: ", colorCount)
 
         # number of subranges is the number of colors there can be;
         # more subranges = less rounding/more colors, & vice-versa
@@ -118,11 +118,11 @@ class ImageProcessor:
                 # otherwise, keep filling
                 thisSubrangeSize += numberOfThisColor
         # add a final end (if it isn't there already) and a beginning
-        if len(subrangeEnds) != numberOfSubranges:
+        if (len(subrangeEnds) != numberOfSubranges):
             subrangeEnds.append(256)
         subrangeEnds.insert(0, 0)
 
-        # print(subrangeEnds)
+        #print("Subrange ends: ", subrangeEnds)
 
         # take a weighted average of each subrange
         # this is used for averaging the colors in each subrange
@@ -133,10 +133,13 @@ class ImageProcessor:
             for j in range(subrangeEnds[i-1], subrangeEnds[i]):
                 thisSubrangeColorSum += colorCount[j] * j
                 thisSubrangePixelCount += colorCount[j]
-            subrangeAverages.append( math.ceil(thisSubrangeColorSum/thisSubrangePixelCount) )
+            if (thisSubrangePixelCount==0):
+                subrangeAverages.append(0)
+            else:
+                subrangeAverages.append( math.ceil(thisSubrangeColorSum/thisSubrangePixelCount) )
             # print(thisSubrangePixelCount)
             
-        # print(subrangeAverages)
+        #print("Subrange averages: ", subrangeAverages)
 
         # now we map each color to its subrange average
         subrangeTable = []
@@ -144,13 +147,26 @@ class ImageProcessor:
             for j in range(subrangeEnds[i-1], subrangeEnds[i]):
                 subrangeTable.append(subrangeAverages[i-1])
         
-        # print(subrangeTable)
+        #print("Subrange table: ", subrangeTable)
+        #print(len(subrangeTable))
 
+
+        #max = 0
+        #min = 300
         # set each pixel in the subranges to the average of its subrange
         for x in range(width):
             for y in range(height):
                 pixel = img[x, y]
+
+                #if(pixel>max):
+                #    max=pixel
+                #if(pixel<min):
+                #    min=pixel
+
+
                 img[x, y] = subrangeTable[pixel]
+        #print("max: ", max)
+        #print("min: ", min)
 
     # Deletes pixels that are not touching other pixels
     # Image must be in black and white

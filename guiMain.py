@@ -83,8 +83,8 @@ def submit():
         Gaussian()
 
         #note: you can use either rounding function
-        imageProcessor.balancedRoundColors(roundness)
-        #imageProcessor.roundColors(roundness)
+        #imageProcessor.balancedRoundColors(roundness)
+        imageProcessor.roundColors(roundness)
 
         imageProcessor.lapAdj()
         imageProcessor.delPix()
