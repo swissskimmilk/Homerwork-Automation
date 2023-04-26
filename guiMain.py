@@ -68,9 +68,9 @@ def submit():
 
     imageProcessor = ImageProcessor(image)
 
-    roundness = int(textbox.get("1.0", tk.END))
-    blurTimes = 2
-    minChainLength = 20
+    roundness = int(roundnessInput.get("1.0", tk.END))
+    blurTimes = int(blurTimesInput.get("1.0", tk.END))
+    minChainLength = int(minChainLengthInput.get("1.0", tk.END))
 
     # all the different sorts of treatments
     def BW():
@@ -168,11 +168,29 @@ treatmentMenu = ttk.OptionMenu(
 )
 treatmentMenu.grid(column=1, row=2, padx=5, pady=5)
 
-textbox = tk.Text(window, height=1, width=15)
-textbox.grid(column=2, row=2, padx=5, pady=5)
-textbox.insert(tk.END, "4")
+# note: change these constants to change the defualt values in the boxes
+ROUNDNESS_DEFUALT = "4"
+roundnessInputText = ttk.Label(window, text="roundness")
+roundnessInputText.grid(column=0, row=3, columnspan=2, padx=5, pady=5)
+roundnessInput = tk.Text(window, height=1, width=15)
+roundnessInput.grid(column=2, row=3, padx=5, pady=5)
+roundnessInput.insert(tk.END, ROUNDNESS_DEFUALT)
+
+BLUR_TIMES_DEFUALT = "2"
+blurTimesInputText = ttk.Label(window, text="blur times")
+blurTimesInputText.grid(column=0, row=4, columnspan=2, padx=5, pady=5)
+blurTimesInput = tk.Text(window, height=1, width=15)
+blurTimesInput.grid(column=2, row=4, padx=5, pady=5)
+blurTimesInput.insert(tk.END, BLUR_TIMES_DEFUALT)
+
+MIN_CHAIN_LENGTH_DEFUALT = "20"
+minChainLengthInputText = ttk.Label(window, text="minimum chain length")
+minChainLengthInputText.grid(column=0, row=5, columnspan=2, padx=5, pady=5)
+minChainLengthInput = tk.Text(window, height=1, width=15)
+minChainLengthInput.grid(column=2, row=5, padx=5, pady=5)
+minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFUALT)
 
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
-submitButton.grid(column=3, row=2, padx=5, pady=5)
+submitButton.grid(column=5, row=2, padx=5, pady=5)
 
 window.mainloop()
