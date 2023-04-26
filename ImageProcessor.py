@@ -373,7 +373,7 @@ class ImageProcessor:
             gcodeCommandSet = (gcodeCommand.strip("\n")).split(" ")
             
             # last part of command set is z; if z is retracted height then it is retracted/stopped there
-            if ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ) and ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ):
+            if ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ):
                 # when we find a command, grow the chain
                 currentChain.append(gcodeCommand)
             else:
@@ -453,6 +453,7 @@ class ImageProcessor:
             gcodeWrite.write(gcodeCommandToWrite)
         gcodeWrite.close()
     
+
     # erases duplicate gcode commands
     def duplicateEraser(self):
         gcodeCommands = open("Output/drawing.gcode", "r").readlines()
@@ -470,19 +471,38 @@ class ImageProcessor:
             gcodeWrite.write(gcodeCommandToWrite)
         gcodeWrite.close()
 
-    # note: these next three methods only work on gcode, not turtle
-    # to be called after lineJoiner
-    # rearanges chains to get the endpoints closer to each other
-    def proximityRearange(self):
+    # note: work in progress
+    # note: this function only works on gcode, not turtle yet
+    # to be called after gcodePurge, lineJoiner, duplicateEraser
+    # tries to connect chains whose endpoints are close to each other
+    def proximityJoin(self, proximity):
+        # 1. find endpoints
+        #       a. add endpoint at beginning and end of command set if there arent already
+        # 2. find coordinates at endpoints
+        # 3. for first two coordinates, find the closest other coordiante and see if it is within proximity (proximity should be pretty small)
+        #       a. if within proximity, join the chains;
+        #       b. then check closest endpoints to the newly formed larger chain's own endpoints
+        #       c. repeat until no other endpoint is within proximity of the endpoints of the large main chain
 
-        return 
-    # to be called after proximityRearange
-    # joins chains whose endpoints are close to each other
-    def proximityJoin(self):
-        return
-    # helper method to find endpoints
-    # returns 
-    def findProximity():
-        # first, finds endpoints of chains
 
+        # helper function to find endpoints
+        # returns list of pairs of endpoint line numbers
+        def findProximity():
+            # first, finds endpoints of chains
+            gcodeCommands = open("Output/drawing.gcode", "r").readlines()
+            thisGcodeCommand = gcodeCommands[0]
+            thisGcodeCommandHeight = int((((thisGcodeCommand.strip("\n")).split(" "))[-1]).strip("Z"))
+            startIndicies = []
+            endIndicies = []
+            thisEndpoint = [-1, -2]
+            lineIndex = 0
+
+            #print(thisGcodeCommandHeight == 5)
+            #print(thisEndpoint[1])
+
+            print(gcodeCommands[0])
+            print(gcodeCommands[-1])
+            return 
+
+        findProximity()
         return
