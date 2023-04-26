@@ -12,7 +12,7 @@ gaussianK = (1 / 16, 2 / 16, 1 / 16, 2 / 16, 4 / 16, 2 / 16, 1 / 16, 2 / 16, 1 /
 lapAdjK = (0, 1, 0, 1, -4, 1, 0, 1, 0)
 lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
-RETRACT_HEIGHT = 10
+RETRACT_HEIGHT = 30
 OPERATING_HEIGHT = 5
 FEEDRATE = 1000
 
@@ -452,3 +452,37 @@ class ImageProcessor:
         for gcodeCommandToWrite in toWrite:
             gcodeWrite.write(gcodeCommandToWrite)
         gcodeWrite.close()
+    
+    # erases duplicate gcode commands
+    def duplicateEraser(self):
+        gcodeCommands = open("Output/drawing.gcode", "r").readlines()
+
+        toWrite = []
+        # go through each valid command to be checked...
+        for index in range(len(gcodeCommands)-1):
+            # ...if there is a duplicate ahead, delete/ignore this one...
+            # ...if not, note this command to write later
+            if(gcodeCommands[index] != gcodeCommands[index+1]):
+                toWrite.append(gcodeCommands[index])
+        
+        gcodeWrite = open("Output/drawing.gcode", "w")
+        for gcodeCommandToWrite in toWrite:
+            gcodeWrite.write(gcodeCommandToWrite)
+        gcodeWrite.close()
+
+    # note: these next three methods only work on gcode, not turtle
+    # to be called after lineJoiner
+    # rearanges chains to get the endpoints closer to each other
+    def proximityRearange(self):
+
+        return 
+    # to be called after proximityRearange
+    # joins chains whose endpoints are close to each other
+    def proximityJoin(self):
+        return
+    # helper method to find endpoints
+    # returns 
+    def findProximity():
+        # first, finds endpoints of chains
+
+        return

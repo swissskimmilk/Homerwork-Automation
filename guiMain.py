@@ -103,6 +103,7 @@ def submit():
         # note: -1 is just a placeholder value
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
         imageProcessor.lineJoiner(-1)
+        imageProcessor.duplicateEraser()
 
     if treatment == treatments[0]:
         BW()
@@ -170,21 +171,21 @@ treatmentMenu.grid(column=1, row=2, padx=5, pady=5)
 
 # note: change these constants to change the defualt values in the boxes
 ROUNDNESS_DEFUALT = "4"
-roundnessInputText = ttk.Label(window, text="roundness")
+roundnessInputText = ttk.Label(window, text="roundness:")
 roundnessInputText.grid(column=0, row=3, columnspan=2, padx=5, pady=5)
 roundnessInput = tk.Text(window, height=1, width=15)
 roundnessInput.grid(column=2, row=3, padx=5, pady=5)
 roundnessInput.insert(tk.END, ROUNDNESS_DEFUALT)
 
 BLUR_TIMES_DEFUALT = "2"
-blurTimesInputText = ttk.Label(window, text="blur times")
+blurTimesInputText = ttk.Label(window, text="blur times:")
 blurTimesInputText.grid(column=0, row=4, columnspan=2, padx=5, pady=5)
 blurTimesInput = tk.Text(window, height=1, width=15)
 blurTimesInput.grid(column=2, row=4, padx=5, pady=5)
 blurTimesInput.insert(tk.END, BLUR_TIMES_DEFUALT)
 
 MIN_CHAIN_LENGTH_DEFUALT = "20"
-minChainLengthInputText = ttk.Label(window, text="minimum chain length")
+minChainLengthInputText = ttk.Label(window, text="minimum chain length:")
 minChainLengthInputText.grid(column=0, row=5, columnspan=2, padx=5, pady=5)
 minChainLengthInput = tk.Text(window, height=1, width=15)
 minChainLengthInput.grid(column=2, row=5, padx=5, pady=5)
