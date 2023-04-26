@@ -191,6 +191,9 @@ minChainLengthInput = tk.Text(window, height=1, width=15)
 minChainLengthInput.grid(column=2, row=5, padx=5, pady=5)
 minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFUALT)
 
+# how to run multiple times
+submitButtonText = ttk.Label(window, text="Note: click submit button twice to run again")
+submitButtonText.grid(column=5, row=3, columnspan=2, padx=5, pady=5)
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
 submitButton.grid(column=5, row=2, padx=5, pady=5)
 
