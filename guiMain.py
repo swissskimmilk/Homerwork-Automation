@@ -184,7 +184,7 @@ roundnessInput = tk.Text(window, height=1, width=15)
 roundnessInput.grid(column=1, row=4, padx=5, pady=5)
 roundnessInput.insert(tk.END, ROUNDNESS_DEFAULT)
 
-BLUR_TIMES_DEFAULT = "2"
+BLUR_TIMES_DEFAULT = "0"
 blurTimesInputText = ttk.Label(window, text="Blur times:")
 blurTimesInputText.grid(column=0, row=5, columnspan=1, padx=5, pady=5)
 blurTimesInput = tk.Text(window, height=1, width=15)
