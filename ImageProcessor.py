@@ -356,7 +356,14 @@ class ImageProcessor:
         # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
         currentChain = []
         toWrite = []
-        for gcodeCommand in gcodeRead.readlines():
+
+        # ignore the first two gcode lines
+        gcodeCommands = gcodeRead.readlines()
+        toWrite.append(gcodeCommands[0])
+        toWrite.append(gcodeCommands[1])
+
+        for index in range(2, len(gcodeCommands) ):
+            gcodeCommand = gcodeCommands[index]
             gcodeCommandSet = (gcodeCommand.strip("\n")).split(" ")
             
             # last part of command set is z; if z is retracted height then it is retracted/stopped there
@@ -372,72 +379,120 @@ class ImageProcessor:
                     toWrite = toWrite + currentChain
                 # finally, start a new chain
                 currentChain = []
-        toWrite.append("G1 X0 Y0")
         gcodeRead.close()
 
         # wipe and write
         gcodeWrite = open("Output/drawing.gcode", "w")
-        for gcodeCommandToWrite in toWrite:
-            gcodeWrite.write(gcodeCommandToWrite)
+        for index in range(len(toWrite)):
+            gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
 
     
     # note: THIS MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
     # joins smaller lines into larger lines
-    # maxLeeway is the maximum number of unaligned pixels that can be read over before the larger line is cut
-    # example: if there are two smaller lines that would make a larger line when connected but have a gap in between,
-    # maxLeeway would allow the function to skip over that gap and connect them anyways
-    # also the max distance the function will keep going after the end of a line to make sure it really is the end
-    # (and not just another gap to be skipped over again)
-    def lineJoiner(self, maxLeeway):
+    def lineJoiner(self):
         # note: ONLY WORKS WITH GCODE FOR NOW
-        # note: only joins vertical and horizontal lines for now
-        # note: leeway doesn't work for now
-
         gcodeRead = open("Output/drawing.gcode", "r")
+        gcodeCommands = gcodeRead.readlines()
 
-        # note: IGNORE THIS FOR NOW
-        # current number of pixels that dont match up;
-        # we can wait until this number is up to maxLeeway instead of immediately starting a new chain...
-        # ...in order to give a bit of leeway
-        # misalignedPixels = 0
-
+        # ignore first two commands
         toWrite = []
-        theChain = []
-        # goes through and looks for line chains (same x or y)
-        for thisGcodeCommand in gcodeRead.readlines():
+        toWrite.append(gcodeCommands[0])
+        toWrite.append(gcodeCommands[1])
+
+        mode = "N/A"
+
+        previousGcodeCommand = "N/A"
+        thisGcodeCommand = gcodeCommands[2]
+
+        startCommand = "NA"
+        endCommand = "NA"
+        # starts a new chain starting at THIS command
+        def startNewChain():
+            startCommand = thisGcodeCommand
+            mode = "new"
+        # ends the chain ending on the PREVIOUS command
+        def endLastChain():
+            endCommand = previousGcodeCommand
+            toWrite.append(startCommand)
+            toWrite.append(endCommand)
+            startCommand = "NA"
+            endCommand = "NA"
+        
+        #startNewChain()
+        startCommand = thisGcodeCommand
+        mode = "new"
+
+        for index in range (3, len(gcodeCommands) ):
+            previousGcodeCommand = gcodeCommands[index-1]
+            previousGcodeCommandSet = (previousGcodeCommand.strip("\n")).split(" ")
+            previousGcodeCommandX = previousGcodeCommandSet[1].strip("X")
+            previousGcodeCommandY = previousGcodeCommandSet[2].strip("Y")
+            previousGcodeCommandZ = previousGcodeCommandSet[3].strip("Z")
+
+            thisGcodeCommand = gcodeCommands[index]
             thisGcodeCommandSet = (thisGcodeCommand.strip("\n")).split(" ")
+            thisGcodeCommandX = thisGcodeCommandSet[1].strip("X")
+            thisGcodeCommandY = thisGcodeCommandSet[2].strip("Y")
+            thisGcodeCommandZ = thisGcodeCommandSet[3].strip("Z")
 
-            # if theres nothing in the chain yet then start one
-            if len(theChain) == 0:
-                theChain.append(thisGcodeCommand)
-            else:
-                # if there is already is some points in the chain, then see if you can start a line
-                # example: line means this point has the same x as last point, which has last x as last point, etc. (same with y)
-                previousCommandSet = ((theChain[-1]).strip("\n")).split(" ")
-                if (previousCommandSet[1] == thisGcodeCommandSet[1]):
-                    # same x, start of vertical line
-                    theChain.append(thisGcodeCommand)
-                elif (previousCommandSet[2] == thisGcodeCommandSet[2]):
-                    # same y, start of horizontal line
-                    theChain.append(thisGcodeCommand)
+            # sees if THIS point is splitting off from last
+            def splitOff():
+
+                def inLine():
+
+                    def xInline():
+                        return ((mode=="X") or (mode=="new")) and (thisGcodeCommandX==previousGcodeCommandX)
+                    def yInline():
+                        return ((mode=="Y") or (mode=="new")) and (thisGcodeCommandY==previousGcodeCommandY)
+
+                    return xInline() or yInline()
+                def lastCommandWasStop():
+                    return (previousGcodeCommandZ == str(RETRACT_HEIGHT) )
+                
+                return (not inLine()) or lastCommandWasStop()
+            
+            # if stopped, end last chain and append this stop command
+            if(thisGcodeCommandZ == str(RETRACT_HEIGHT) ):
+                #endLastChain()
+                endCommand = previousGcodeCommand
+                toWrite.append(startCommand)
+                toWrite.append(endCommand)
+                startCommand = "NA"
+                endCommand = "NA"
+
+                toWrite.append(thisGcodeCommand)
+                mode = "stopped"
+            elif( splitOff() ):
+                # if this command is split off from last, start new chain with this current one;
+                # no need to end last chain if it was already done
+                if(mode == "stopped"):
+                    #startNewChain()
+                    startCommand = thisGcodeCommand
+                    mode = "new"
                 else:
-                    # neither same x nor y; diagonal
-                    # end line at previous point, start a new one
-                    # if line only had one point then note only one point
-                    if  len(theChain)==1:
-                        toWrite.append(theChain[0])
-                    else:
-                        toWrite.append(theChain[0])
-                    toWrite.append(theChain[-1])
-                    theChain = []
-
+                    # otherwise, we have to end the last chain ourselves
+                    #endLastChain()
+                    endCommand = previousGcodeCommand
+                    toWrite.append(startCommand)
+                    toWrite.append(endCommand)
+                    startCommand = "NA"
+                    endCommand = "NA"
+                    #startNewChain()
+                    startCommand = thisGcodeCommand
+                    mode = "new"
+            else:
+                # not split off, continue chain
+                if(thisGcodeCommandX==previousGcodeCommandX):
+                    mode = "X"
+                elif(thisGcodeCommandX==previousGcodeCommandX):
+                    mode = "Y"
         gcodeRead.close()
-
+        
         # wipe and write
         gcodeWrite = open("Output/drawing.gcode", "w")
-        for gcodeCommandToWrite in toWrite:
-            gcodeWrite.write(gcodeCommandToWrite)
+        for index in range(len(toWrite)):
+            gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
     
 
@@ -452,10 +507,12 @@ class ImageProcessor:
             # ...if not, note this command to write later
             if(gcodeCommands[index] != gcodeCommands[index+1]):
                 toWrite.append(gcodeCommands[index])
+        # append last command (no need to check it)
+        toWrite.append(gcodeCommands[-1])
         
         gcodeWrite = open("Output/drawing.gcode", "w")
-        for gcodeCommandToWrite in toWrite:
-            gcodeWrite.write(gcodeCommandToWrite)
+        for index in range(len(toWrite)):
+            gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
 
     # note: work in progress
