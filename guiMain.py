@@ -98,8 +98,9 @@ def submit():
         imageProcessor.toGCode()
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
-        imageProcessor.turtlePurge(minChainLength)
-        imageProcessor.gcodePurge(minChainLength)
+        if(minChainLength<=-1):
+            imageProcessor.turtlePurge(minChainLength)
+            imageProcessor.gcodePurge(minChainLength)
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
         imageProcessor.lineJoiner()
         imageProcessor.duplicateEraser()
@@ -183,8 +184,8 @@ blurTimesInput = tk.Text(window, height=1, width=15)
 blurTimesInput.grid(column=2, row=4, padx=5, pady=5)
 blurTimesInput.insert(tk.END, BLUR_TIMES_DEFUALT)
 
-MIN_CHAIN_LENGTH_DEFUALT = "20"
-minChainLengthInputText = ttk.Label(window, text="minimum chain length:")
+MIN_CHAIN_LENGTH_DEFUALT = "-1"
+minChainLengthInputText = ttk.Label(window, text="minimum chain length:\n(set to -1 to disable)")
 minChainLengthInputText.grid(column=0, row=5, columnspan=2, padx=5, pady=5)
 minChainLengthInput = tk.Text(window, height=1, width=15)
 minChainLengthInput.grid(column=2, row=5, padx=5, pady=5)
