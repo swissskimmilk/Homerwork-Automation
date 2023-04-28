@@ -449,8 +449,6 @@ class ImageProcessor:
             thisGcodeCommandY = thisGcodeCommandSet[2].strip("Y")
             thisGcodeCommandZ = thisGcodeCommandSet[3].strip("Z")
 
-            print(thisGcodeCommandX, thisGcodeCommandY, thisGcodeCommandZ)
-
             # sees if THIS point is splitting off from last
             def splitOff():
 
