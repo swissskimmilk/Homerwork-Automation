@@ -99,10 +99,10 @@ def submit():
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
         imageProcessor.turtlePurge(minChainLength)
-        imageProcessor.gcodePurge(minChainLength)
+        # imageProcessor.gcodePurge(minChainLength)
         # note: -1 is just a placeholder value
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
-        imageProcessor.lineJoiner(-1)
+        # imageProcessor.lineJoiner(-1)
         imageProcessor.duplicateEraser()
 
     if treatment == treatments[0]:

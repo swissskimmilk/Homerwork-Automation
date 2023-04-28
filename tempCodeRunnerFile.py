@@ -1,2 +1,1 @@
-
-        # imageProcessor.gaussianBlur()
+print([0] * 256)

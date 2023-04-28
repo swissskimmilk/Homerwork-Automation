@@ -12,15 +12,16 @@ gaussianK = (1 / 16, 2 / 16, 1 / 16, 2 / 16, 4 / 16, 2 / 16, 1 / 16, 2 / 16, 1 /
 lapAdjK = (0, 1, 0, 1, -4, 1, 0, 1, 0)
 lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
-RETRACT_HEIGHT = 30
-OPERATING_HEIGHT = 5
-FEEDRATE = 1000
+RETRACT_HEIGHT = 2
+OPERATING_HEIGHT = 0
+FEEDRATE = 12000
 
 # PAPER_WIDTH = 209.55
 # PAPER_HEIGHT = 273.05
-PAPER_WIDTH = 235
-PAPER_HEIGHT = 235
-
+PAPER_WIDTH = 215
+PAPER_HEIGHT = 215
+Y_OFFSET = 20
+X_OFFSET = 10
 
 class ImageProcessor:
     def __init__(self, imageIn):
@@ -61,22 +62,18 @@ class ImageProcessor:
                     pixel = [round(i / stepMult) * stepMult for i in pixel]
                     img[x, y] = tuple(pixel)
     # like roundColors, but more balanced;
-    # trys to make sure every sub-range of colors has similar pixel count
+    # trys to make sure every sub-range of colors have similar pixel count
     def balancedRoundColors(self, numberOfSubranges):
         img = self.image.load()
         width = self.image.width
         height = self.image.height
 
         # first tally how many times a color shows up; its index is its color value
-        colorCount = []
-        for i in range(256):
-            colorCount.append(0)
+        colorCount = [0] * 256 
         for x in range(width):
             for y in range(height):
                 pixel = img[x, y]
                 colorCount[pixel] += 1
-
-        #print("Color count: ", colorCount)
 
         # number of subranges is the number of colors there can be;
         # more subranges = less rounding/more colors, & vice-versa
@@ -216,11 +213,8 @@ class ImageProcessor:
         height = self.image.height
 
         # Magically finds lines and returns as a list of tuples
-        # Todo: remove tog?
         def lineSearch(x, y, biasX, biasY):
-            tog = False
-            if img[x, y] != 0:
-                tog = True
+
             # BL,BM,BR,ML,MM,MR,TL,TM,TR
             maxInd = -1
             maxPref = 0
@@ -230,52 +224,44 @@ class ImageProcessor:
                 if a > maxPref:
                     maxPref = a
                     maxInd = 0
-                tog = False
             if y > 0 and img[x, y - 1] != 0:
                 a = abs(biasX) + abs(-1 + biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 1
-                tog = False
             if x < width - 1 and y > 0 and img[x + 1, y - 1] != 0:
                 a = abs(1 + biasX) + abs(-1 + biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 2
-                tog = False
             if x > 0 and img[x - 1, y] != 0:
                 a = abs(-1 + biasX) + abs(biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 3
-                tog = False
             if x < width - 1 and img[x + 1, y] != 0:
                 a = abs(1 + biasX) + abs(biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 5
-                tog = False
             if x > 0 and y < height - 1 and img[x - 1, y + 1] != 0:
                 a = abs(-1 + biasX) + abs(1 + biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 6
-                tog = False
             if y < height - 1 and img[x, y + 1] != 0:
                 a = abs(biasX) + abs(1 + biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 7
-                tog = False
             if x < width - 1 and y < height - 1 and img[x + 1, y + 1] != 0:
                 a = abs(1 + biasX) + abs(1 + biasY)
                 if a > maxPref:
                     maxPref = a
                     maxInd = 8
-                tog = False
 
             if maxInd == -1:
-                # This probabally works
+                # This probabaly works
                 return None
             newX = x + maxInd % 3 - 1
             newY = y + maxInd // 3 - 1
@@ -299,6 +285,7 @@ class ImageProcessor:
         
         gcodeOutput.write("G28\n")
         gcodeOutput.write(f"G1 F{FEEDRATE}\n")
+        gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         for x in range(width):
             for y in range(height):
                 if img[x, y] != 0:
@@ -307,9 +294,9 @@ class ImageProcessor:
                     if linePixels != None and len(linePixels) > 3:
                         turtleOutput.write(f"{x},{y}\n")
                         gcodeOutput.write(
-                            f"G1 X{x/width * PAPER_WIDTH} Y{y/height * PAPER_HEIGHT} Z{RETRACT_HEIGHT}\n"
+                            f"G1 X{x/width * PAPER_WIDTH + X_OFFSET} Y{y/height * PAPER_HEIGHT + Y_OFFSET}\n"
                         )
-                        # gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
+                        gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
                         arrLen = len(linePixels)
                         # print(linePixels)
                         bx = 0
@@ -320,10 +307,10 @@ class ImageProcessor:
                                     f"{linePixels[i][0]},{linePixels[i][1]}\n"
                                 )
                                 gcodeOutput.write(
-                                    f"G1 X{linePixels[i][0]/width * PAPER_WIDTH} Y{linePixels[i][1]/height * PAPER_HEIGHT} Z{OPERATING_HEIGHT}\n"
+                                    f"G1 X{linePixels[i][0]/width * PAPER_WIDTH + X_OFFSET} Y{linePixels[i][1]/height * PAPER_HEIGHT + Y_OFFSET}\n"
                                 )
                     turtleOutput.write("stop\n")
-                    # gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
+                    gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")
 
