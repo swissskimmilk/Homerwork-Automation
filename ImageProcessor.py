@@ -16,13 +16,6 @@ RETRACT_HEIGHT = 2
 OPERATING_HEIGHT = 0
 FEEDRATE = 12000
 
-# PAPER_WIDTH = 209.55
-# PAPER_HEIGHT = 273.05
-PAPER_WIDTH = 215
-PAPER_HEIGHT = 215
-Y_OFFSET = 20
-X_OFFSET = 10
-
 class ImageProcessor:
     def __init__(self, imageIn):
         self.image = Image.open(imageIn)
@@ -207,7 +200,7 @@ class ImageProcessor:
                     if isLonePixel:
                         img[x, y] = 0
 
-    def toGCode(self):
+    def toGCode(self, minChainLength, xOffset, yOffset, paperWidth, paperHeight):
         img = self.image.copy().load()
         width = self.image.width
         height = self.image.height
@@ -290,11 +283,12 @@ class ImageProcessor:
             for y in range(height):
                 if img[x, y] != 0:
                     linePixels = lineSearch(x, y, 0, 0)
-
+                    if minChainLength != -1 and linePixels <= minChainLength:
+                        continue
                     if linePixels != None and len(linePixels) > 3:
                         turtleOutput.write(f"{x},{y}\n")
                         gcodeOutput.write(
-                            f"G1 X{x/width * PAPER_WIDTH + X_OFFSET} Y{y/height * PAPER_HEIGHT + Y_OFFSET}\n"
+                            f"G1 X{x/width * paperWidth + xOffset} Y{y/height * paperHeight + yOffset}\n"
                         )
                         gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
                         arrLen = len(linePixels)
@@ -307,10 +301,10 @@ class ImageProcessor:
                                     f"{linePixels[i][0]},{linePixels[i][1]}\n"
                                 )
                                 gcodeOutput.write(
-                                    f"G1 X{linePixels[i][0]/width * PAPER_WIDTH + X_OFFSET} Y{linePixels[i][1]/height * PAPER_HEIGHT + Y_OFFSET}\n"
+                                    f"G1 X{linePixels[i][0]/width * paperWidth + xOffset} Y{linePixels[i][1]/height * paperHeight + yOffset}\n"
                                 )
-                    turtleOutput.write("stop\n")
-                    gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
+                        turtleOutput.write("stop\n")
+                        gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")
 
@@ -349,7 +343,7 @@ class ImageProcessor:
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
         turtleWrite.close()
-    # just for gcode
+    # DEPRECATED TO REMOVE 
     def gcodePurge(self, minChainLength):
         gcodeRead = open("Output/drawing.gcode", "r")
         # a chain is the number of commands between two stops

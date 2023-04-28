@@ -8,7 +8,7 @@ import turtle
 
 from ImageProcessor import *
 
-MAX_DIMENSION = 500
+MAX_DIMENSION = 450
 treatments = [
     "BW",
     "Gaussian",
@@ -71,6 +71,10 @@ def submit():
     roundness = int(roundnessInput.get("1.0", tk.END))
     blurTimes = int(blurTimesInput.get("1.0", tk.END))
     minChainLength = int(minChainLengthInput.get("1.0", tk.END))
+    xOffset = int(xOffsetInput.get("1.0", tk.END))
+    yOffset = int(yOffsetInput.get("1.0", tk.END))
+    paperWidth = int(paperWidthInput.get("1.0", tk.END))
+    paperHeight = int(paperHeightInput.get("1.0", tk.END))
 
     # all the different sorts of treatments
     def BW():
@@ -95,7 +99,7 @@ def submit():
         imageProcessor.delPix()
     def Lap_Adj_to_GCode():
         Laplacian_Adj()
-        imageProcessor.toGCode()
+        imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
         if(minChainLength<=-1):
@@ -148,6 +152,9 @@ inputImageLabel.grid(column=0, row=1, columnspan=2, padx=5, pady=5)
 outputImageLabel = ttk.Label(window, image=None)
 outputImageLabel.grid(column=2, row=1, columnspan=2, padx=5, pady=5)
 
+processingHeader = ttk.Label(window, text="Processing Options", font="Helvetica 18 bold")
+processingHeader.grid(column=0, row=2, columnspan=2, padx=5, pady=10)
+
 imageSelection = tk.StringVar()
 imageMenu = ttk.OptionMenu(
     window,
@@ -157,7 +164,7 @@ imageMenu = ttk.OptionMenu(
     style="Accent.TOptionMenu",
     command=updateInputImage,
 )
-imageMenu.grid(column=0, row=2, padx=5, pady=5)
+imageMenu.grid(column=0, row=3, padx=5, pady=5)
 
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
@@ -167,34 +174,63 @@ treatmentMenu = ttk.OptionMenu(
     *treatments,
     style="Accent.TOptionMenu",
 )
-treatmentMenu.grid(column=1, row=2, padx=5, pady=5)
+treatmentMenu.grid(column=1, row=3, padx=5, pady=5)
 
 # note: change these constants to change the defualt values in the boxes
-ROUNDNESS_DEFUALT = "4"
-roundnessInputText = ttk.Label(window, text="roundness:")
-roundnessInputText.grid(column=0, row=3, columnspan=2, padx=5, pady=5)
+ROUNDNESS_DEFAULT = "4"
+roundnessInputText = ttk.Label(window, text="Roundness:")
+roundnessInputText.grid(column=0, row=4, columnspan=1, padx=5, pady=5)
 roundnessInput = tk.Text(window, height=1, width=15)
-roundnessInput.grid(column=2, row=3, padx=5, pady=5)
-roundnessInput.insert(tk.END, ROUNDNESS_DEFUALT)
+roundnessInput.grid(column=1, row=4, padx=5, pady=5)
+roundnessInput.insert(tk.END, ROUNDNESS_DEFAULT)
 
-BLUR_TIMES_DEFUALT = "2"
-blurTimesInputText = ttk.Label(window, text="blur times:")
-blurTimesInputText.grid(column=0, row=4, columnspan=2, padx=5, pady=5)
+BLUR_TIMES_DEFAULT = "2"
+blurTimesInputText = ttk.Label(window, text="Blur times:")
+blurTimesInputText.grid(column=0, row=5, columnspan=1, padx=5, pady=5)
 blurTimesInput = tk.Text(window, height=1, width=15)
-blurTimesInput.grid(column=2, row=4, padx=5, pady=5)
-blurTimesInput.insert(tk.END, BLUR_TIMES_DEFUALT)
+blurTimesInput.grid(column=1, row=5, padx=5, pady=5)
+blurTimesInput.insert(tk.END, BLUR_TIMES_DEFAULT)
 
-MIN_CHAIN_LENGTH_DEFUALT = "-1"
-minChainLengthInputText = ttk.Label(window, text="minimum chain length:\n(set to -1 to disable)")
-minChainLengthInputText.grid(column=0, row=5, columnspan=2, padx=5, pady=5)
+MIN_CHAIN_LENGTH_DEFAULT = "-1"
+minChainLengthInputText = ttk.Label(window, text="Minimum line length:\n(set to -1 to disable)")
+minChainLengthInputText.grid(column=0, row=6, columnspan=1, padx=5, pady=5)
 minChainLengthInput = tk.Text(window, height=1, width=15)
-minChainLengthInput.grid(column=2, row=5, padx=5, pady=5)
-minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFUALT)
+minChainLengthInput.grid(column=1, row=6, padx=5, pady=5)
+minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFAULT)
+
+processingHeader = ttk.Label(window, text="Printer Options", font="Helvetica 18 bold")
+processingHeader.grid(column=2, row=2, columnspan=2, padx=5, pady=10)
+
+X_OFFSET_DEFAULT = 10 
+xOffsetInputText = ttk.Label(window, text="X offset")
+xOffsetInputText.grid(column=2, row=3, columnspan=1, padx=5, pady=5)
+xOffsetInput = tk.Text(window, height=1, width=15)
+xOffsetInput.grid(column=3, row=3, padx=5, pady=5)
+xOffsetInput.insert(tk.END, X_OFFSET_DEFAULT)
+
+Y_OFFSET_DEFAULT = 25 
+yOffsetInputText = ttk.Label(window, text="Y offset")
+yOffsetInputText.grid(column=2, row=4, columnspan=1, padx=5, pady=5)
+yOffsetInput = tk.Text(window, height=1, width=15)
+yOffsetInput.grid(column=3, row=4, padx=5, pady=5)
+yOffsetInput.insert(tk.END, Y_OFFSET_DEFAULT)
+
+PAPER_WIDTH_DEFAULT = 200
+paperWidthInputText = ttk.Label(window, text="Paper width")
+paperWidthInputText.grid(column=2, row=5, columnspan=1, padx=5, pady=5)
+paperWidthInput = tk.Text(window, height=1, width=15)
+paperWidthInput.grid(column=3, row=5, padx=5, pady=5)
+paperWidthInput.insert(tk.END, PAPER_WIDTH_DEFAULT)
+
+PAPER_HEIGHT_DEFAULT = 200
+paperHeightInputText = ttk.Label(window, text="Paper height")
+paperHeightInputText.grid(column=2, row=6, columnspan=1, padx=5, pady=5)
+paperHeightInput = tk.Text(window, height=1, width=15)
+paperHeightInput.grid(column=3, row=6, padx=5, pady=5)
+paperHeightInput.insert(tk.END, PAPER_HEIGHT_DEFAULT)
 
 # how to run multiple times
-submitButtonText = ttk.Label(window, text="Note: click submit button twice to run again")
-submitButtonText.grid(column=5, row=3, columnspan=2, padx=5, pady=5)
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
-submitButton.grid(column=5, row=2, padx=5, pady=5)
+submitButton.grid(column=0, row=7, columnspan=4, padx=5, pady=5)
 
 window.mainloop()
