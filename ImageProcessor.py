@@ -488,7 +488,7 @@ class ImageProcessor:
         for index in range(len(toWrite)):
             gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
-    
+
 
     # erases duplicate gcode commands
     def duplicateEraser(self):
