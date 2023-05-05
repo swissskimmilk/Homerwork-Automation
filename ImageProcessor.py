@@ -283,9 +283,8 @@ class ImageProcessor:
             for y in range(height):
                 if img[x, y] != 0:
                     linePixels = lineSearch(x, y, 0, 0)
-                    if minChainLength != -1 and linePixels <= minChainLength:
-                        continue
-                    if linePixels != None and len(linePixels) > 3:
+
+                    def linePixelsWrite():
                         turtleOutput.write(f"{x},{y}\n")
                         gcodeOutput.write(
                             f"G1 X{x/width * paperWidth + xOffset} Y{y/height * paperHeight + yOffset}\n"
@@ -305,6 +304,18 @@ class ImageProcessor:
                                 )
                         turtleOutput.write("stop\n")
                         gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
+
+                    # before doing anything, check if linePixels is valid
+                    if( linePixels != None ):
+                        
+                        # then see if minchainlength is turned on or not
+                        if( minChainLength<=2 ):
+                            # minchainlength turned off, just write dont check
+                            linePixelsWrite()
+                        else:
+                            # minchainlength turned on, check before write
+                            if( len(linePixels)>minChainLength ):
+                                linePixelsWrite()
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")
 
@@ -343,7 +354,8 @@ class ImageProcessor:
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
         turtleWrite.close()
-    # DEPRECATED TO REMOVE 
+    # DEPRECATED TO REMOVE
+    # note: this should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
     def gcodePurge(self, minChainLength):
         gcodeRead = open("Output/drawing.gcode", "r")
         # a chain is the number of commands between two stops
