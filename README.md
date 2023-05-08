@@ -1,5 +1,5 @@
 # Homerwork-Automation
-Hello, this is the Homerwork Automation repository where you can download the software for our product here.
+Hello, this is the Homerwork Automation repository where you can download the software for our product.
 
 In order to use the Homerwork Automation product, you will need:
 1. this software
