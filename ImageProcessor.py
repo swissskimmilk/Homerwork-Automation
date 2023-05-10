@@ -350,7 +350,8 @@ class ImageProcessor:
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
         turtleWrite.close()
-    # DEPRECATED TO REMOVE 
+    # DEPRECATED TO REMOVE
+    # note: this should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
     def gcodePurge(self, minChainLength):
         gcodeRead = open("Output/drawing.gcode", "r")
         # a chain is the number of commands between two stops
@@ -495,7 +496,7 @@ class ImageProcessor:
         for index in range(len(toWrite)):
             gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
-    
+
 
     # erases duplicate gcode commands
     def duplicateEraser(self):
