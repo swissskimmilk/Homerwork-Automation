@@ -17,7 +17,7 @@ treatments = [
     "Lap Adj to GCode",
     "Lap Adj to GCode plus purge",
 ]
-
+myTurtle = None
 
 # Resizes the image and puts it in the right format for Tkinter. dwabtit
 def formatImage(image):
@@ -37,28 +37,26 @@ def updateInputImage(imageName):
     inputImageLabel.config(image=inputImage)
     inputImageLabel.image = inputImage
 
-
 def runTurtle():
-    t = turtle.Turtle()
-    t.speed(0)
-    t.ht()
-    t.up()
+    global myTurtle
+    if myTurtle == None: 
+        myTurtle = turtle.Turtle()
+    myTurtle.speed(0)
+    myTurtle.ht()
+    myTurtle.up()
     turtle.delay(0)
     turtle.screensize(1024, 1024)
-
-    t.clear()
+    myTurtle.clear()
     with open("Output/turtle.txt") as txt:
         allCommands = txt.readlines()
-        # delay = False
         for command in allCommands:
             command = command.strip()
             if command == "stop" or command == "end":
-                t.up()
+                myTurtle.up()
             else:
                 x, y = map(int, command.split(","))
-                t.goto(x - 512, -(y - 512))
-                t.down()
-    input()
+                myTurtle.goto(x - 512, -(y - 512))
+                myTurtle.down()
 
 
 # Runs whatever is selected and displays the output
@@ -184,7 +182,7 @@ roundnessInput = tk.Text(window, height=1, width=15)
 roundnessInput.grid(column=1, row=4, padx=5, pady=5)
 roundnessInput.insert(tk.END, ROUNDNESS_DEFAULT)
 
-BLUR_TIMES_DEFAULT = "2"
+BLUR_TIMES_DEFAULT = "0"
 blurTimesInputText = ttk.Label(window, text="Blur times:")
 blurTimesInputText.grid(column=0, row=5, columnspan=1, padx=5, pady=5)
 blurTimesInput = tk.Text(window, height=1, width=15)

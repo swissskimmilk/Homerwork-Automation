@@ -140,7 +140,6 @@ class ImageProcessor:
         #print("Subrange table: ", subrangeTable)
         #print(len(subrangeTable))
 
-
         #max = 0
         #min = 300
         # set each pixel in the subranges to the average of its subrange
@@ -152,7 +151,6 @@ class ImageProcessor:
                 #    max=pixel
                 #if(pixel<min):
                 #    min=pixel
-
 
                 img[x, y] = subrangeTable[pixel]
         #print("max: ", max)
@@ -288,11 +286,11 @@ class ImageProcessor:
                     turtleOutput.write(f"{x},{y}\n")
                     if width > height:
                         gcodeOutput.write(
-                            f"G1 X{x/width * paperWidth + xOffset} Y{y/width * paperHeight + yOffset}\n"
+                            f"G1 X{x/width * paperWidth + xOffset} Y{paperHeight - y/width * paperHeight + yOffset}\n"
                         )
                     else: 
                         gcodeOutput.write(
-                            f"G1 X{x/height * paperWidth + xOffset} Y{y/height * paperHeight + yOffset}\n"
+                            f"G1 X{x/height * paperWidth + xOffset} Y{paperHeight - y/height * paperHeight + yOffset}\n"
                         )
 
                     gcodeOutput.write(f"G1 Z{OPERATING_HEIGHT}\n")
@@ -304,11 +302,11 @@ class ImageProcessor:
                             )
                             if width > height: 
                                 gcodeOutput.write(
-                                    f"G1 X{linePixels[i][0]/width * paperWidth + xOffset} Y{linePixels[i][1]/width * paperHeight + yOffset}\n"
+                                    f"G1 X{linePixels[i][0]/width * paperWidth + xOffset} Y{paperHeight - linePixels[i][1]/width * paperHeight + yOffset}\n"
                                 )
                             else:
                                 gcodeOutput.write(
-                                    f"G1 X{linePixels[i][0]/height * paperWidth + xOffset} Y{linePixels[i][1]/height * paperHeight + yOffset}\n"
+                                    f"G1 X{linePixels[i][0]/height * paperWidth + xOffset} Y{paperHeight - linePixels[i][1]/height * paperHeight + yOffset}\n"
                                 )
 
                                 
