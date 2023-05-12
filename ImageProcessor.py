@@ -308,10 +308,20 @@ class ImageProcessor:
                                 gcodeOutput.write(
                                     f"G1 X{linePixels[i][0]/height * paperWidth + xOffset} Y{paperHeight - linePixels[i][1]/height * paperHeight + yOffset}\n"
                                 )
+                        turtleOutput.write("stop\n")
+                        gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
 
-                                
-                    turtleOutput.write("stop\n")
-                    gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
+                    # before doing anything, check if linePixels is valid
+                    if( linePixels != None ):
+
+                        # then see if minchainlength is turned on or not
+                        if( minChainLength<=2 ):
+                            # minchainlength turned off, just write dont check
+                            linePixelsWrite()
+                        else:
+                            # minchainlength turned on, check before write
+                            if( len(linePixels)>minChainLength ):
+                                linePixelsWrite()
         turtleOutput.write("end\n")
         gcodeOutput.write("G1 X0 Y0\n")
 
@@ -390,7 +400,8 @@ class ImageProcessor:
         gcodeWrite.close()
 
     
-    # note: THIS MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
+    # note: this function will be unused for now
+    # note: THIS MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING
     # joins smaller lines into larger lines
     def lineJoiner(self):
         # note: ONLY WORKS WITH GCODE FOR NOW
@@ -519,36 +530,26 @@ class ImageProcessor:
 
     # note: work in progress
     # note: this function only works on gcode, not turtle yet
-    # to be called after gcodePurge, lineJoiner, duplicateEraser
-    # tries to connect chains whose endpoints are close to each other
+    # rearange sets of commands so the endpoints are closer to each other
     def proximityJoin(self, proximity):
         # 1. find endpoints
-        #       a. add endpoint at beginning and end of command set if there arent already
-        # 2. find coordinates at endpoints
-        # 3. for first two coordinates, find the closest other coordiante and see if it is within proximity (proximity should be pretty small)
-        #       a. if within proximity, join the chains;
-        #       b. then check closest endpoints to the newly formed larger chain's own endpoints
-        #       c. repeat until no other endpoint is within proximity of the endpoints of the large main chain
+        #       a. ignore first and last command chains
+        # 2. start on an ending endpoint, search for an endpoint (not from this chain) that is closest.
+        #       a. if other endpoint is a start endpoint, move up the entire chain
+        #       b. if the other endpoint is an end endpoint, flip the entire chain and move it up
 
+        # first, finds endpoints of chains
+        gcodeCommands = open("Output/drawing.gcode", "r").readlines()
+        thisGcodeCommand = gcodeCommands[0]
+        thisGcodeCommandHeight = int((((thisGcodeCommand.strip("\n")).split(" "))[-1]).strip("Z"))
+        startIndicies = []
+        endIndicies = []
+        thisEndpoint = [-1, -2]
+        lineIndex = 0
 
-        # helper function to find endpoints
-        # returns list of pairs of endpoint line numbers
-        def findProximity():
-            # first, finds endpoints of chains
-            gcodeCommands = open("Output/drawing.gcode", "r").readlines()
-            thisGcodeCommand = gcodeCommands[0]
-            thisGcodeCommandHeight = int((((thisGcodeCommand.strip("\n")).split(" "))[-1]).strip("Z"))
-            startIndicies = []
-            endIndicies = []
-            thisEndpoint = [-1, -2]
-            lineIndex = 0
+        #print(thisGcodeCommandHeight == 5)
+        #print(thisEndpoint[1])
 
-            #print(thisGcodeCommandHeight == 5)
-            #print(thisEndpoint[1])
-
-            print(gcodeCommands[0])
-            print(gcodeCommands[-1])
-            return 
-
-        findProximity()
+        print(gcodeCommands[0])
+        print(gcodeCommands[-1])
         return
