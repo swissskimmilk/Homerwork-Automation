@@ -14,6 +14,8 @@ lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
 RETRACT_HEIGHT = 1
 OPERATING_HEIGHT = 0
+# retract extra high up at the end in order to avoid hitting the clips while homing
+AVOID_CLIP_HEIGHT = 10
 FEEDRATE = 12000
 
 class ImageProcessor:
@@ -313,6 +315,8 @@ class ImageProcessor:
                     turtleOutput.write("stop\n")
                     gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
+        # lift pen before homing so it doesnt hit the clips
+        gcodeOutput.write(f"G1 Z" + str(AVOID_CLIP_HEIGHT) + "\n")
         gcodeOutput.write("G1 X0 Y0\n")
 
         turtleOutput.close()
