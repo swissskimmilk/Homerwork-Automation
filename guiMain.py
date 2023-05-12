@@ -130,7 +130,7 @@ def submit():
 
 
 window = tk.Tk()
-window.title("HWA Image Processing GUI")
+window.title("Homerwork Automation Image Processing GUI")
 
 window.tk.call("source", "azure.tcl")
 window.tk.call("set_theme", "light")
