@@ -100,9 +100,11 @@ def submit():
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
+        # note: gcodePurge() should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
+        imageProcessor.gcodePurge(minChainLength)
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING IN toGCode()
         #imageProcessor.lineJoiner()
-        imageProcessor.duplicateEraser()
+        #imageProcessor.duplicateEraser()
 
     if treatment == treatments[0]:
         BW()

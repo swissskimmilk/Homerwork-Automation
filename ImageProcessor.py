@@ -358,39 +358,51 @@ class ImageProcessor:
     # note: this should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
     def gcodePurge(self, minChainLength):
         gcodeRead = open("Output/drawing.gcode", "r")
-        # a chain is the number of commands between two stops
-        # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
-        currentChain = []
-        toWrite = []
-
-        # ignore the first two gcode lines
         gcodeCommands = gcodeRead.readlines()
+
+        # look for when the pen lifts or lowers;
+        # lowering = end of gap, about to draw; previous command is coordinate of first point of segment, last point of jump
+        # raising = end of drawing, about to jump gap; previous command is coordinate of last point of segment, first point of jump
+        # a drawn line segment = first point of segment to last point of segment (command before lowering to command before raising)
+        # a gap = first point of jump to last point of jump (command before raising to command before lowering)
+
+
+        heightChangeIndicies = []
+        endPointIndicies = []
+
+        # don't include segments or gaps that are too small
+        toWrite = []
+        # ignore the first four gcode commands (homing, feedrate, first raising, going to first point coordinate)
         toWrite.append(gcodeCommands[0])
         toWrite.append(gcodeCommands[1])
+        toWrite.append(gcodeCommands[2])
+        toWrite.append(gcodeCommands[3])
 
-        for index in range(2, len(gcodeCommands) ):
+        previousCoordCommand = gcodeCommands[3]
+        global mode
+        mode = "NA"
+        # ignore the last two gcode commands (extra raising, homing)
+        for index in range(2, len(gcodeCommands)-2 ):
             gcodeCommand = gcodeCommands[index]
             gcodeCommandSet = (gcodeCommand.strip("\n")).split(" ")
-            
-            # last part of command set is z; if z is retracted height then it is retracted/stopped there
-            if ( gcodeCommandSet[-1] != "Z"+str(RETRACT_HEIGHT) ):
-                # when we find a command, grow the chain
-                currentChain.append(gcodeCommand)
-            else:
-                # end of command chain;
-                # if the last chain was large enough, note it down to write later;
-                # if it was too small, then forget about it
-                if len(currentChain) >= minChainLength:
-                    currentChain.append(gcodeCommand)
-                    toWrite = toWrite + currentChain
-                # finally, start a new chain
-                currentChain = []
+
+            if( gcodeCommandSet[-1]=="Z"+str(OPERATING_HEIGHT) or gcodeCommandSet[-1]=="Z"+str(RETRACT_HEIGHT) ):
+                heightChangeIndicies.append(index)
+                endPointIndicies.append(index-1)
+
+        for index in heightChangeIndicies:
+            print(gcodeCommands[index])
+            print(gcodeCommands[index-1])
+
+        toWrite.append(gcodeCommands[-2])
+        toWrite.append(gcodeCommands[-1])
         gcodeRead.close()
+
 
         # wipe and write
         gcodeWrite = open("Output/drawing.gcode", "w")
-        for index in range(len(toWrite)):
-            gcodeWrite.write(toWrite[index])
+        for command in gcodeCommands:
+            gcodeWrite.write(command)
         gcodeWrite.close()
 
     
