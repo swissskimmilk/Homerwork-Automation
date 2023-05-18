@@ -360,8 +360,6 @@ class ImageProcessor:
     #    first five gcode commands are: homing, feedrate, first raising, going to first point coordinate, Z{OPERATING_HEIGHT} respectively
     #    last two gcode commands are: Z{RETRACT_HEIGHT}, extra raising, homing, repectively
     def gcodePurge(self, minChainLength):
-        gcodeRead = open("Output/drawing.gcode", "r")
-        allGcodeCommands = gcodeRead.readlines()
 
         def smallGapPurge(minChainLength):
             gcodeRead = open("Output/drawing.gcode", "r")
@@ -373,7 +371,7 @@ class ImageProcessor:
             raisingPoints = []
             loweringPoints = []
 
-            # go through the valid commands and search for pairs of raising and lowerings (gaps); ignore first gap and last gap
+            # go through the valid commands and search for pairs of raisings and lowerings (gaps); ignore first gap and last gap
             for index in range(5, len(allGcodeCommands)-3 ):
                 previousGcodeCommand = allGcodeCommands[index-1]
                 previousGcodeCommandset = (previousGcodeCommand.strip("\n")).split(" ")
@@ -406,7 +404,46 @@ class ImageProcessor:
             gcodeWrite.close()
 
         smallGapPurge(minChainLength)
-        
+
+        def smallSegmentPurge(minChainLength):
+            gcodeRead = open("Output/drawing.gcode", "r")
+            allGcodeCommands = gcodeRead.readlines()
+
+            # indicies are integers, points are [x, y], [x, y], [x, y], ...
+            loweringIndicies = []
+            raisingIndicies = []
+
+            # go through the valid commands and search for pairs of lowerings and raisings (segments)
+            for index in range(4, len(allGcodeCommands)-2 ):
+                thisGcodeCommand = allGcodeCommands[index]
+                thisGcodeCommandset = (thisGcodeCommand.strip("\n")).split(" ")
+
+                if( thisGcodeCommandset[-1]=="Z"+str(OPERATING_HEIGHT) ):
+                    loweringIndicies.append(index)
+                elif( thisGcodeCommandset[-1]=="Z"+str(RETRACT_HEIGHT) ):
+                    raisingIndicies.append(index)
+            
+            # find the size of each segment, delete segment (let the pen skip it by connecting the two gaps around it) if segment is too small
+            for index in range(len(raisingIndicies)):
+                segmentSize = (raisingIndicies[index]-loweringIndicies[index]) - 1
+                if(segmentSize<minChainLength):
+                    # set the segment and first gap commands to "TODELETE" now and delete later
+                    for i in range(loweringIndicies[index]-1, raisingIndicies[index]+1):
+                        allGcodeCommands[i] = "TODELETE"
+            for index in range(len(allGcodeCommands)-1, -1, -1):
+                if(allGcodeCommands[index] == "TODELETE"):
+                    del(allGcodeCommands[index])
+                    
+
+            # wipe and write
+            gcodeWrite = open("Output/drawing.gcode", "w")
+            for command in allGcodeCommands:
+                gcodeWrite.write(command)
+            gcodeWrite.close()
+
+        smallSegmentPurge(minChainLength)
+    
+    # note: TO REMOVE
     def gcodePurgeTemp():
         # look for when the pen lifts or lowers;
         # lowering = end of gap, about to draw; previous command is coordinate of first point of segment, can be last point of jump
