@@ -354,7 +354,7 @@ class ImageProcessor:
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
         turtleWrite.close()
-    # note: this should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
+    # note: dont remove gcodePurge, it now has extra functionality
     # preconditions:
     #    first five gcode commands are: homing, feedrate, first raising, going to first point coordinate, Z{OPERATING_HEIGHT} respectively
     #    last two gcode commands are: Z{RETRACT_HEIGHT}, extra raising, homing, repectively
@@ -445,7 +445,6 @@ class ImageProcessor:
         smallSegmentPurge(minChainLength)
 
     
-    # note: THIS MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
     # joins smaller lines into larger lines
     def lineJoiner(self):
         # note: ONLY WORKS WITH GCODE FOR NOW
@@ -546,7 +545,7 @@ class ImageProcessor:
     # note: this function only works on gcode, not turtle yet
     # to be called after gcodePurge, lineJoiner, duplicateEraser
     # tries to connect chains whose endpoints are close to each other
-    def proximityJoin(self, proximity):
+    def nearestNeighbor(self, proximity):
         # 1. find endpoints
         #       a. add endpoint at beginning and end of command set if there arent already
         # 2. find coordinates at endpoints

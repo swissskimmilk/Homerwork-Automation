@@ -1,9 +1,7 @@
-# this is main, run this
-
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.filedialog as tkfd
 from PIL import ImageTk, Image
-import os
 import turtle
 
 from ImageProcessor import *
@@ -23,8 +21,10 @@ def formatImage(image):
 
 
 # Updates image when a new one is selected, called by dropdown listener
-def updateInputImage(imageName):
-    inputImage = Image.open(f"Images/{imageName}")
+def updateInputImage():
+    global imagePath
+    imagePath = tkfd.askopenfilename()
+    inputImage = Image.open(imagePath)
     inputImage = formatImage(inputImage)
     inputImageLabel.config(image=inputImage)
     inputImageLabel.image = inputImage
@@ -53,9 +53,10 @@ def runTurtle():
 
 # Runs whatever is selected and displays the output
 def submit():
+    # pathOptimiaztion = name of path optimization method
     pathOptimization = pathOptimizationSelection.get()
     treatment = treatmentSelection.get()
-    image = f"Images/{imageSelection.get()}"
+    image = imagePath
 
     imageProcessor = ImageProcessor(image)
 
@@ -94,11 +95,20 @@ def submit():
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
-        # note: gcodePurge() should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
+
+        # note: dont remove gcodePurge, it now has extra functionality
         imageProcessor.gcodePurge(minChainLength)
-        # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING IN toGCode()
+
         imageProcessor.lineJoiner()
+
+        # note: duplicateEraser() works fine, but doesnt seem to be needed as of now
         #imageProcessor.duplicateEraser()
+
+
+        # do nothing if first (0th) option (no optimization) is selected;
+        # skip over it/ignore it
+        if pathOptimization == pathOptimizations[1]:
+            imageProcessor.nearestNeighbor()
 
     if treatment == treatments[0]:
         BW()
@@ -238,15 +248,7 @@ paperHeightInput = tk.Text(window, height=1, width=15)
 paperHeightInput.grid(column=3, row=6, padx=5, pady=5)
 paperHeightInput.insert(tk.END, PAPER_HEIGHT_DEFAULT)
 
-imageSelection = tk.StringVar()
-imageMenu = ttk.OptionMenu(
-    window,
-    imageSelection,
-    "Select image",
-    *os.listdir(r"Images"),
-    style="Accent.TOptionMenu",
-    command=updateInputImage,
-)
+imageMenu = ttk.Button(window, style="", text="Select image", command=updateInputImage)
 imageMenu.grid(column=0, row=8, padx=5, pady=5)
 
 # how to run multiple times
