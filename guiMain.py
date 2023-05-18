@@ -9,14 +9,6 @@ import turtle
 from ImageProcessor import *
 
 MAX_DIMENSION = 450
-treatments = [
-    "BW",
-    "Gaussian",
-    "Laplacian Adj",
-    "Laplacian All",
-    "Lap Adj to GCode",
-    "Lap Adj to GCode plus purge",
-]
 myTurtle = None
 
 # Resizes the image and puts it in the right format for Tkinter. dwabtit
@@ -61,6 +53,7 @@ def runTurtle():
 
 # Runs whatever is selected and displays the output
 def submit():
+    pathOptimization = pathOptimizationSelection.get()
     treatment = treatmentSelection.get()
     image = f"Images/{imageSelection.get()}"
 
@@ -73,6 +66,7 @@ def submit():
     yOffset = int(yOffsetInput.get("1.0", tk.END))
     paperWidth = int(paperWidthInput.get("1.0", tk.END))
     paperHeight = int(paperHeightInput.get("1.0", tk.END))
+    kVariable = int(kVariableInput.get("1.0", tk.END))
 
     # all the different sorts of treatments
     def BW():
@@ -152,17 +146,28 @@ outputImageLabel.grid(column=2, row=1, columnspan=2, padx=5, pady=5)
 processingHeader = ttk.Label(window, text="Processing Options", font="Helvetica 18 bold")
 processingHeader.grid(column=0, row=2, columnspan=2, padx=5, pady=10)
 
-imageSelection = tk.StringVar()
-imageMenu = ttk.OptionMenu(
+pathOptimizations = [
+    "No optimization",
+    "Nearest Neighbor",
+]
+pathOptimizationSelection = tk.StringVar()
+pathOptimizationMenu = ttk.OptionMenu(
     window,
-    imageSelection,
-    "Select image",
-    *os.listdir(r"Images"),
+    pathOptimizationSelection,
+    "Select path optimization method",
+    *pathOptimizations,
     style="Accent.TOptionMenu",
-    command=updateInputImage,
 )
-imageMenu.grid(column=0, row=3, padx=5, pady=5)
+pathOptimizationMenu.grid(column=0, row=3, padx=5, pady=5)
 
+treatments = [
+    "BW",
+    "Gaussian",
+    "Laplacian Adj",
+    "Laplacian All",
+    "Lap Adj to GCode",
+    "Lap Adj to GCode plus purge",
+]
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
     window,
@@ -195,6 +200,13 @@ minChainLengthInput = tk.Text(window, height=1, width=15)
 minChainLengthInput.grid(column=1, row=6, padx=5, pady=5)
 minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFAULT)
 
+K_VARIABLE_DEFAULT = -1
+kVariableInputText = ttk.Label(window, text="k variable")
+kVariableInputText.grid(column=0, row=7, columnspan=1, padx=5, pady=5)
+kVariableInput = tk.Text(window, height=1, width=15)
+kVariableInput.grid(column=1, row=7, padx=5, pady=5)
+kVariableInput.insert(tk.END, K_VARIABLE_DEFAULT)
+
 processingHeader = ttk.Label(window, text="Printer Options", font="Helvetica 18 bold")
 processingHeader.grid(column=2, row=2, columnspan=2, padx=5, pady=10)
 
@@ -226,8 +238,19 @@ paperHeightInput = tk.Text(window, height=1, width=15)
 paperHeightInput.grid(column=3, row=6, padx=5, pady=5)
 paperHeightInput.insert(tk.END, PAPER_HEIGHT_DEFAULT)
 
+imageSelection = tk.StringVar()
+imageMenu = ttk.OptionMenu(
+    window,
+    imageSelection,
+    "Select image",
+    *os.listdir(r"Images"),
+    style="Accent.TOptionMenu",
+    command=updateInputImage,
+)
+imageMenu.grid(column=0, row=8, padx=5, pady=5)
+
 # how to run multiple times
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
-submitButton.grid(column=0, row=7, columnspan=4, padx=5, pady=5)
+submitButton.grid(column=0, row=8, columnspan=4, padx=5, pady=5)
 
 window.mainloop()
