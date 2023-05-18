@@ -354,7 +354,6 @@ class ImageProcessor:
         for turtleCommandToWrite in toWrite:
             turtleWrite.write(turtleCommandToWrite)
         turtleWrite.close()
-    # DEPRECATED TO REMOVE
     # note: this should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
     # preconditions:
     #    first five gcode commands are: homing, feedrate, first raising, going to first point coordinate, Z{OPERATING_HEIGHT} respectively
@@ -396,7 +395,8 @@ class ImageProcessor:
                 if(allGcodeCommands[index] == "TODELETE"):
                     del(allGcodeCommands[index])
                     
-
+            gcodeRead.close()
+            
             # wipe and write
             gcodeWrite = open("Output/drawing.gcode", "w")
             for command in allGcodeCommands:
@@ -433,7 +433,8 @@ class ImageProcessor:
             for index in range(len(allGcodeCommands)-1, -1, -1):
                 if(allGcodeCommands[index] == "TODELETE"):
                     del(allGcodeCommands[index])
-                    
+            
+            gcodeRead.close()
 
             # wipe and write
             gcodeWrite = open("Output/drawing.gcode", "w")
@@ -442,86 +443,6 @@ class ImageProcessor:
             gcodeWrite.close()
 
         smallSegmentPurge(minChainLength)
-    
-    # note: TO REMOVE
-    def gcodePurgeTemp():
-        # look for when the pen lifts or lowers;
-        # lowering = end of gap, about to draw; previous command is coordinate of first point of segment, can be last point of jump
-        # raising = end of drawing, about to jump gap; previous command is coordinate of last point of segment, can be first point of jump
-        # a drawn line segment = first point of segment to last point of segment (command before lowering to command before raising)
-        # a gap = first point of jump to last point of jump (command before raising to command before lowering)
-
-        global previousEndpoint
-        global thisEndpoint
-
-        # don't include segments or gaps that are too small
-        toWrite = []
-        bench = []
-        # ignore the first four gcode commands (homing, feedrate, first raising, going to first point coordinate, first lowering)
-        toWrite.append(allGcodeCommands[0])
-        toWrite.append(allGcodeCommands[1])
-        toWrite.append(allGcodeCommands[2])
-        toWrite.append(allGcodeCommands[3])
-        toWrite.append(allGcodeCommands[4])
-        global mode
-        mode = "SEGMENT"
-
-        # ignore the last two gcode commands (extra raising, homing)
-        for index in range(5, len(allGcodeCommands)-2 ):
-            thisGcodeCommand = allGcodeCommands[index]
-            thisGcodeCommandset = (thisGcodeCommand.strip("\n")).split(" ")
-            previousGcodeCommand = allGcodeCommands[index-1]
-            previousGcodeCommandset = (previousGcodeCommand.strip("\n")).split(" ")
-
-            if( thisGcodeCommandset[-1]=="Z"+str(OPERATING_HEIGHT) ):
-                # lowering = end of gap, about to draw; previous command is coordinate of first point of segment, can be last point of jump
-                thisEndpoint = previousGcodeCommand
-                bench.append(thisGcodeCommand)
-
-                if(mode == "GAP"):
-                    thisEndpointCommandSet = (thisEndpoint.strip("\n")).split(" ")
-                    thisEndpointX = thisEndpointCommandSet[1].strip("X")
-                    thisEndpointY = thisEndpointCommandSet[2].strip("Y")
-                    previousEndpointCommandSet = (previousEndpoint.strip("\n")).split(" ")
-                    previousEndpointX = previousEndpointCommandSet[1].strip("X")
-                    previousEndpointY = previousEndpointCommandSet[2].strip("Y")
-                    if(math.dist([thisEndpointX, thisEndpointY], [previousEndpointX, previousEndpointY]) >= minChainLength):
-                        toWrite.append("G1 Z" + str() + "\n")
-                    else:
-                        toWrite.append(thisEndpoint)
-
-                bench = []
-                previousEndpoint = thisEndpoint
-                mode = "SEGMENT"
-            elif( thisGcodeCommandset[-1]=="Z"+str(RETRACT_HEIGHT) ):
-                # raising = end of drawing, about to jump gap; previous command is coordinate of last point of segment, can be first point of jump
-                thisEndpoint = previousGcodeCommand
-                bench.append(thisGcodeCommand)
-
-                if(mode == "SEGMENT"):
-                    if(len(bench) > minChainLength):
-                        toWrite = toWrite + bench
-                    
-
-                
-                bench = []
-                previousEndpoint = thisEndpoint
-                mode = "GAP"
-            else:
-                bench.append(thisGcodeCommand)
-
-
-        # ignore the last two gcode commands (extra raising, homing)
-        toWrite.append(allGcodeCommands[-2])
-        toWrite.append(allGcodeCommands[-1])
-        gcodeRead.close()
-
-
-        # wipe and write
-        gcodeWrite = open("Output/drawing.gcode", "w")
-        for command in allGcodeCommands:
-            gcodeWrite.write(command)
-        gcodeWrite.close()
 
     
     # note: THIS MUST BE USED AFTER PURGE FUNCTION, DO NOT USE BEFORE PURGE FUNCTION
@@ -531,98 +452,67 @@ class ImageProcessor:
         gcodeRead = open("Output/drawing.gcode", "r")
         allGcodeCommands = gcodeRead.readlines()
 
-        # ignore first two commands
-        toWrite = []
-        toWrite.append(allGcodeCommands[0])
-        toWrite.append(allGcodeCommands[1])
-
-        mode = "N/A"
-
-        previousGcodeCommand = "N/A"
-        thisGcodeCommand = allGcodeCommands[2]
-
-        startCommand = "NA"
-        endCommand = "NA"
-        # starts a new chain starting at THIS command
-        def startNewChain():
-            startCommand = thisGcodeCommand
-            mode = "new"
-        # ends the chain ending on the PREVIOUS command
-        def endLastChain():
-            endCommand = previousGcodeCommand
-            toWrite.append(startCommand)
-            toWrite.append(endCommand)
-            startCommand = "NA"
-            endCommand = "NA"
-        
-        #startNewChain()
-        startCommand = thisGcodeCommand
-        mode = "new"
-
-        for index in range (3, len(allGcodeCommands) ):
-            previousGcodeCommand = allGcodeCommands[index-1]
-            previousallGcodeCommandset = (previousGcodeCommand.strip("\n")).split(" ")
-            previousGcodeCommandX = previousallGcodeCommandset[1].strip("X")
-            previousGcodeCommandY = previousallGcodeCommandset[2].strip("Y")
-            previousGcodeCommandZ = previousallGcodeCommandset[3].strip("Z")
-
-            thisGcodeCommand = allGcodeCommands[index]
-            thisallGcodeCommandset = (thisGcodeCommand.strip("\n")).split(" ")
-            thisGcodeCommandX = thisallGcodeCommandset[1].strip("X")
-            thisGcodeCommandY = thisallGcodeCommandset[2].strip("Y")
-            thisGcodeCommandZ = thisallGcodeCommandset[3].strip("Z")
-
-            # sees if THIS point is splitting off from last
-            def splitOff():
-
-                def inLine():
-
-                    def xInline():
-                        return ((mode=="X") or (mode=="new")) and (thisGcodeCommandX==previousGcodeCommandX)
-                    def yInline():
-                        return ((mode=="Y") or (mode=="new")) and (thisGcodeCommandY==previousGcodeCommandY)
-
-                    return xInline() or yInline()
-                def lastCommandWasStop():
-                    return (previousGcodeCommandZ == str(RETRACT_HEIGHT) )
-                
-                return (not inLine()) or lastCommandWasStop()
-            
-            # if stopped, end last chain and append this stop command
-            if(thisGcodeCommandZ == str(RETRACT_HEIGHT) ):
-                #endLastChain()
-                endCommand = previousGcodeCommand
-                toWrite.append(startCommand)
-                toWrite.append(endCommand)
-                startCommand = "NA"
-                endCommand = "NA"
-
-                toWrite.append(thisGcodeCommand)
-                mode = "stopped"
-            elif( splitOff() ):
-                # if this command is split off from last, start new chain with this current one;
-                # no need to end last chain if it was already done
-                if(mode == "stopped"):
-                    #startNewChain()
-                    startCommand = thisGcodeCommand
-                    mode = "new"
-                else:
-                    # otherwise, we have to end the last chain ourselves
-                    #endLastChain()
-                    endCommand = previousGcodeCommand
-                    toWrite.append(startCommand)
-                    toWrite.append(endCommand)
-                    startCommand = "NA"
-                    endCommand = "NA"
-                    #startNewChain()
-                    startCommand = thisGcodeCommand
-                    mode = "new"
+        def isXYPoint(commandToCheck):
+            # a command is an XY point if it is [G1, X, Y];
+            # in other words, if its split-up set is len 3
+            commandToCheckSet = (commandToCheck.strip("\n")).split(" ")
+            return (len(commandToCheckSet)==3)
+        def isCheckablePoint(allGcodeCommands, indexToCheck):
+            # a point is checkable if it, along with the previous & next (surrounding) points, are checkable
+            return (isXYPoint(allGcodeCommands[indexToCheck-1]) and isXYPoint(allGcodeCommands[indexToCheck]) and isXYPoint(allGcodeCommands[indexToCheck+1]))
+        # returns the old gcode command if it doesn't need to be erased, but returns "TODELETE" if command should be deleted
+        def correctedCommand(allGcodeCommands, index):
+            # only checked XY points can be removed, so all non-checkable points will automatically NOT be removed
+            if not isCheckablePoint(allGcodeCommands, index):
+                return allGcodeCommands[index]
             else:
-                # not split off, continue chain
-                if(thisGcodeCommandX==previousGcodeCommandX):
-                    mode = "X"
-                elif(thisGcodeCommandX==previousGcodeCommandX):
-                    mode = "Y"
+                
+                def haveSameXCommands(allGcodeCommands, index):
+                    previousCommand = allGcodeCommands[index-1]
+                    previousCommandSet = (previousCommand.strip("\n")).split(" ")
+                    thisCommand = allGcodeCommands[index]
+                    thisCommandSet = (thisCommand.strip("\n")).split(" ")
+                    nextCommand = allGcodeCommands[index+1]
+                    nextCommandSet = (nextCommand.strip("\n")).split(" ")
+                    return ((previousCommandSet[1]==thisCommandSet[1]) and (thisCommandSet[1]==nextCommandSet[1]))
+                
+                def haveSameYCommands(allGcodeCommands, index):
+                    previousCommand = allGcodeCommands[index-1]
+                    previousCommandSet = (previousCommand.strip("\n")).split(" ")
+                    thisCommand = allGcodeCommands[index]
+                    thisCommandSet = (thisCommand.strip("\n")).split(" ")
+                    nextCommand = allGcodeCommands[index+1]
+                    nextCommandSet = (nextCommand.strip("\n")).split(" ")
+                    return ((previousCommandSet[2]==thisCommandSet[2]) and (thisCommandSet[2]==nextCommandSet[2]))
+                
+                # erase middle points that line up with the line;
+                # erase points that have the same X or same Y commands as their surrounding points
+                if( haveSameXCommands(allGcodeCommands, index) or haveSameYCommands(allGcodeCommands, index) ):
+                    return "TODELETE"
+                else:
+                    # otherwise, DONT delete the command
+                    return allGcodeCommands[index]
+
+
+        # to draw a straight line, we just need the endpoints;
+        # we can ignore the middle points and still draw the same line
+        toWrite = []
+
+        # ignore the first command (homing command)
+        toWrite.append(allGcodeCommands[0])
+
+        # check each valid, checkable point/command
+        for index in range(1, len(allGcodeCommands)-1):
+            # correctedCommands() returns the old gcode command if it doesn't need to be erased,
+            # but returns "TODELETE" if command should be deleted;
+            # dont write commands that are to be deleted
+            correctedCommandResult = correctedCommand(allGcodeCommands, index)
+            if(correctedCommandResult != "TODELETE"):
+                toWrite.append(correctedCommandResult)
+
+        # ignore the last command too (XY homing command)
+        toWrite.append(allGcodeCommands[-1])
+
         gcodeRead.close()
         
         # wipe and write
@@ -650,6 +540,7 @@ class ImageProcessor:
         for index in range(len(toWrite)):
             gcodeWrite.write(toWrite[index])
         gcodeWrite.close()
+
 
     # note: work in progress
     # note: this function only works on gcode, not turtle yet

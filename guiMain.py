@@ -103,7 +103,7 @@ def submit():
         # note: gcodePurge() should be depricated, but other purger in toGCode() doesnt seem to work, so dont remove this for now
         imageProcessor.gcodePurge(minChainLength)
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING IN toGCode()
-        #imageProcessor.lineJoiner()
+        imageProcessor.lineJoiner()
         #imageProcessor.duplicateEraser()
 
     if treatment == treatments[0]:
