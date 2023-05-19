@@ -15,11 +15,11 @@ treatments = [
     "Laplacian Adj",
     "Laplacian All",
     "Lap Adj to GCode",
-    "Lap Adj to GCode plus purge",
+    "Lap All to GCode"
 ]
 myTurtle = None
 
-# Resizes the image and puts it in the right format for Tkinter. dwabtit
+# Resizes the image and puts it in the right format for Tkinter to display it correctly 
 def formatImage(image):
     width, height = image.size
     if width > height:
@@ -37,6 +37,7 @@ def updateInputImage(imageName):
     inputImageLabel.config(image=inputImage)
     inputImageLabel.image = inputImage
 
+# Configs and runs the turtle using the saved turtle.txt file 
 def runTurtle():
     global myTurtle
     if myTurtle == None: 
@@ -59,7 +60,7 @@ def runTurtle():
                 myTurtle.down()
 
 
-# Runs whatever is selected and displays the output
+# Runs whatever treatment is selected and displays the output
 def submit():
     treatment = treatmentSelection.get()
     image = f"Images/{imageSelection.get()}"
@@ -83,11 +84,7 @@ def submit():
             imageProcessor.gaussianBlur()
     def Laplacian_Adj():
         Gaussian()
-
-        #note: you can use either rounding function
-        #imageProcessor.balancedRoundColors(roundness)
         imageProcessor.roundColors(roundness)
-
         imageProcessor.lapAdj()
         imageProcessor.delPix()
     def Laplacian_All():
@@ -98,6 +95,10 @@ def submit():
     def Lap_Adj_to_GCode():
         Laplacian_Adj()
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
+    def Lap_All_to_GCode():
+        Laplacian_All()
+        imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
+    # Deprecated 
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
         # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING IN toGCode()
@@ -115,17 +116,13 @@ def submit():
     elif treatment == treatments[4]:
         Lap_Adj_to_GCode()
     elif treatment == treatments[5]:
-        Lap_Adj_to_GCode_plus_purge()
-
-
-    # temp
-    imageProcessor.image.save("Output/tempoutput.png")
+        Lap_All_to_GCode()
 
     outputImage = formatImage(imageProcessor.image)
     outputImageLabel.config(image=outputImage)
     outputImageLabel.image = outputImage
 
-    if (treatment == treatments[4]) or (treatment == treatments[5]):
+    if (treatment == treatments[4] or treatment == treatments[5]):
         runTurtle()
 
 
@@ -171,7 +168,7 @@ treatmentMenu = ttk.OptionMenu(
 )
 treatmentMenu.grid(column=1, row=3, padx=5, pady=5)
 
-# note: change these constants to change the defualt values in the boxes
+# note: change these constants to change the default values in the boxes
 ROUNDNESS_DEFAULT = "4"
 roundnessInputText = ttk.Label(window, text="Roundness:")
 roundnessInputText.grid(column=0, row=4, columnspan=1, padx=5, pady=5)
@@ -196,14 +193,14 @@ minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFAULT)
 processingHeader = ttk.Label(window, text="Printer Options", font="Helvetica 18 bold")
 processingHeader.grid(column=2, row=2, columnspan=2, padx=5, pady=10)
 
-X_OFFSET_DEFAULT = 10 
+X_OFFSET_DEFAULT = 15
 xOffsetInputText = ttk.Label(window, text="X offset")
 xOffsetInputText.grid(column=2, row=3, columnspan=1, padx=5, pady=5)
 xOffsetInput = tk.Text(window, height=1, width=15)
 xOffsetInput.grid(column=3, row=3, padx=5, pady=5)
 xOffsetInput.insert(tk.END, X_OFFSET_DEFAULT)
 
-Y_OFFSET_DEFAULT = 25 
+Y_OFFSET_DEFAULT = 30
 yOffsetInputText = ttk.Label(window, text="Y offset")
 yOffsetInputText.grid(column=2, row=4, columnspan=1, padx=5, pady=5)
 yOffsetInput = tk.Text(window, height=1, width=15)
@@ -224,7 +221,6 @@ paperHeightInput = tk.Text(window, height=1, width=15)
 paperHeightInput.grid(column=3, row=6, padx=5, pady=5)
 paperHeightInput.insert(tk.END, PAPER_HEIGHT_DEFAULT)
 
-# how to run multiple times
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
 submitButton.grid(column=0, row=7, columnspan=4, padx=5, pady=5)
 

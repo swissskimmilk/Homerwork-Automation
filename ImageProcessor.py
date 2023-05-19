@@ -313,7 +313,7 @@ class ImageProcessor:
                     turtleOutput.write("stop\n")
                     gcodeOutput.write(f"G1 Z{RETRACT_HEIGHT}\n")
         turtleOutput.write("end\n")
-        gcodeOutput.write("G1 X0 Y0\n")
+        gcodeOutput.write("G1 Z5\nG28\n")
 
         turtleOutput.close()
         gcodeOutput.close()
