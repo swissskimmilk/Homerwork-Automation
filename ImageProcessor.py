@@ -321,37 +321,6 @@ class ImageProcessor:
         gcodeOutput.close()
 
 
-    # this is to be used AFTER the turtle/gcode files have already been written
-    # just for turtle
-    def turtlePurge(self, minChainLength):
-        turtleRead = open("Output/turtle.txt", "r")
-        # a chain is the number of commands between two stops
-        # if a chain is too small, then it is just a piece of noise that needs to be gotten rid of; we only want the main chains
-        currentChain = []
-        toWrite = []
-        for turtleCommand in turtleRead.readlines():
-            strippedTurtleCommand = turtleCommand.strip("\n")
-            
-            if (strippedTurtleCommand != "stop") and (strippedTurtleCommand != "end"):
-                # when we find a command, grow the chain
-                currentChain.append(turtleCommand)
-            else:
-                # end of command chain;
-                # if the last chain was large enough, note it down to write later;
-                # if it was too small, then forget about it
-                if len(currentChain) >= minChainLength:
-                    currentChain.append(turtleCommand)
-                    toWrite = toWrite + currentChain
-                # finally, start a new chain
-                currentChain = []
-        toWrite.append("end")
-        turtleRead.close()
-
-        # wipe and write
-        turtleWrite = open("Output/turtle.txt", "w")
-        for turtleCommandToWrite in toWrite:
-            turtleWrite.write(turtleCommandToWrite)
-        turtleWrite.close()
     # note: dont remove gcodePurge, it now has extra functionality
     # preconditions:
     #    first five gcode commands are: homing, feedrate, first raising, going to first point coordinate, Z{OPERATING_HEIGHT} respectively
