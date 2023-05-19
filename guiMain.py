@@ -1,9 +1,7 @@
-# this is main, run this
-
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.filedialog as tkfd
 from PIL import ImageTk, Image
-import os
 import turtle
 
 from ImageProcessor import *
@@ -31,8 +29,10 @@ def formatImage(image):
 
 
 # Updates image when a new one is selected, called by dropdown listener
-def updateInputImage(imageName):
-    inputImage = Image.open(f"Images/{imageName}")
+def updateInputImage():
+    global imagePath
+    imagePath = tkfd.askopenfilename()
+    inputImage = Image.open(imagePath)
     inputImage = formatImage(inputImage)
     inputImageLabel.config(image=inputImage)
     inputImageLabel.image = inputImage
@@ -63,7 +63,7 @@ def runTurtle():
 # Runs whatever treatment is selected and displays the output
 def submit():
     treatment = treatmentSelection.get()
-    image = f"Images/{imageSelection.get()}"
+    image = imagePath
 
     imageProcessor = ImageProcessor(image)
 
@@ -101,9 +101,14 @@ def submit():
     # Deprecated 
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
-        # note: LINEJOINER FUNCTION MUST BE USED AFTER PURGING, DO NOT USE BEFORE PURGING IN toGCode()
-        #imageProcessor.lineJoiner()
-        imageProcessor.duplicateEraser()
+
+        # note: dont remove gcodePurge, it now has extra functionality
+        imageProcessor.gcodePurge(minChainLength)
+
+        imageProcessor.lineJoiner()
+
+        # note: duplicateEraser() works fine, but doesnt seem to be needed as of now
+        #imageProcessor.duplicateEraser()
 
     if treatment == treatments[0]:
         BW()
@@ -127,7 +132,7 @@ def submit():
 
 
 window = tk.Tk()
-window.title("HWA Image Processing GUI")
+window.title("Homerwork Automation Image Processing GUI")
 
 window.tk.call("source", "azure.tcl")
 window.tk.call("set_theme", "light")
@@ -147,17 +152,17 @@ outputImageLabel.grid(column=2, row=1, columnspan=2, padx=5, pady=5)
 processingHeader = ttk.Label(window, text="Processing Options", font="Helvetica 18 bold")
 processingHeader.grid(column=0, row=2, columnspan=2, padx=5, pady=10)
 
-imageSelection = tk.StringVar()
-imageMenu = ttk.OptionMenu(
-    window,
-    imageSelection,
-    "Select image",
-    *os.listdir(r"Images"),
-    style="Accent.TOptionMenu",
-    command=updateInputImage,
-)
+imageMenu = ttk.Button(window, style="", text="Select image", command=updateInputImage)
 imageMenu.grid(column=0, row=3, padx=5, pady=5)
 
+treatments = [
+    "BW",
+    "Gaussian",
+    "Laplacian Adj",
+    "Laplacian All",
+    "Lap Adj to GCode",
+    "Lap Adj to GCode plus purge",
+]
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
     window,
