@@ -62,6 +62,8 @@ def runTurtle():
 
 # Runs whatever treatment is selected and displays the output
 def submit():
+    # pathOptimiaztion = name of path optimization method
+    pathOptimization = pathOptimizationSelection.get()
     treatment = treatmentSelection.get()
     image = imagePath
 
@@ -74,6 +76,7 @@ def submit():
     yOffset = int(yOffsetInput.get("1.0", tk.END))
     paperWidth = int(paperWidthInput.get("1.0", tk.END))
     paperHeight = int(paperHeightInput.get("1.0", tk.END))
+    kVariable = int(kVariableInput.get("1.0", tk.END))
 
     # all the different sorts of treatments
     def BW():
@@ -114,6 +117,12 @@ def submit():
 
         # note: duplicateEraser() works fine, but doesnt seem to be needed as of now
         #imageProcessor.duplicateEraser()
+
+
+        # do nothing if first (0th) option (no optimization) is selected;
+        # skip over it/ignore it
+        if pathOptimization == pathOptimizations[1]:
+            imageProcessor.nearestNeighbor()
 
     if treatment == treatments[0]:
         BW()
@@ -157,8 +166,37 @@ outputImageLabel.grid(column=2, row=1, columnspan=2, padx=5, pady=5)
 processingHeader = ttk.Label(window, text="Processing Options", font="Helvetica 18 bold")
 processingHeader.grid(column=0, row=2, columnspan=2, padx=5, pady=10)
 
-imageMenu = ttk.Button(window, style="", text="Select image", command=updateInputImage)
-imageMenu.grid(column=0, row=3, padx=5, pady=5)
+pathOptimizations = [
+    "No optimization",
+    "Nearest Neighbor",
+]
+pathOptimizationSelection = tk.StringVar()
+pathOptimizationMenu = ttk.OptionMenu(
+    window,
+    pathOptimizationSelection,
+    "Select path optimization method",
+    *pathOptimizations,
+    style="Accent.TOptionMenu",
+)
+pathOptimizationMenu.grid(column=0, row=3, padx=5, pady=5)
+
+treatments = [
+    "BW",
+    "Gaussian",
+    "Laplacian Adj",
+    "Laplacian All",
+    "Lap Adj to GCode",
+    "Lap Adj to GCode plus purge",
+]
+pathOptimizationSelection = tk.StringVar()
+pathOptimizationMenu = ttk.OptionMenu(
+    window,
+    pathOptimizationSelection,
+    "Select path optimization method",
+    *pathOptimizations,
+    style="Accent.TOptionMenu",
+)
+pathOptimizationMenu.grid(column=0, row=3, padx=5, pady=5)
 
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
@@ -192,6 +230,13 @@ minChainLengthInput = tk.Text(window, height=1, width=15)
 minChainLengthInput.grid(column=1, row=6, padx=5, pady=5)
 minChainLengthInput.insert(tk.END, MIN_CHAIN_LENGTH_DEFAULT)
 
+K_VARIABLE_DEFAULT = -1
+kVariableInputText = ttk.Label(window, text="k variable")
+kVariableInputText.grid(column=0, row=7, columnspan=1, padx=5, pady=5)
+kVariableInput = tk.Text(window, height=1, width=15)
+kVariableInput.grid(column=1, row=7, padx=5, pady=5)
+kVariableInput.insert(tk.END, K_VARIABLE_DEFAULT)
+
 processingHeader = ttk.Label(window, text="Printer Options", font="Helvetica 18 bold")
 processingHeader.grid(column=2, row=2, columnspan=2, padx=5, pady=10)
 
@@ -223,7 +268,11 @@ paperHeightInput = tk.Text(window, height=1, width=15)
 paperHeightInput.grid(column=3, row=6, padx=5, pady=5)
 paperHeightInput.insert(tk.END, PAPER_HEIGHT_DEFAULT)
 
+imageMenu = ttk.Button(window, style="", text="Select image", command=updateInputImage)
+imageMenu.grid(column=0, row=8, padx=5, pady=5)
+
+# how to run multiple times
 submitButton = ttk.Button(window, style="Accent.TButton", text="Submit", command=submit)
-submitButton.grid(column=0, row=7, columnspan=4, padx=5, pady=5)
+submitButton.grid(column=0, row=8, columnspan=4, padx=5, pady=5)
 
 window.mainloop()
