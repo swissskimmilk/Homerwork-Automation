@@ -188,16 +188,6 @@ treatments = [
     "Lap Adj to GCode",
     "Lap Adj to GCode plus purge",
 ]
-pathOptimizationSelection = tk.StringVar()
-pathOptimizationMenu = ttk.OptionMenu(
-    window,
-    pathOptimizationSelection,
-    "Select path optimization method",
-    *pathOptimizations,
-    style="Accent.TOptionMenu",
-)
-pathOptimizationMenu.grid(column=0, row=3, padx=5, pady=5)
-
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
     window,
