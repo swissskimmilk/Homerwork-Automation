@@ -95,16 +95,22 @@ def submit():
     def Lap_Adj_to_GCode():
         Laplacian_Adj()
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
+
+
+        After_Changes()
     def Lap_All_to_GCode():
         Laplacian_All()
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
+
+
+        #After_Changes()
     # NOT deprecated
     # to be used after ...to_Gcode() function
     def After_Changes():
         # note: dont remove gcodePurge, it now has extra functionality
         imageProcessor.gcodePurge(minChainLength)
 
-        imageProcessor.lineJoiner()
+        imageProcessor.redundancyRemover()
 
         # note: duplicateEraser() works fine, but doesnt seem to be needed as of now
         #imageProcessor.duplicateEraser()

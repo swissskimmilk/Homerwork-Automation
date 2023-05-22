@@ -413,7 +413,7 @@ class ImageProcessor:
 
     
     # joins smaller lines into larger lines
-    def lineJoiner(self):
+    def redundancyRemover(self):
         # note: ONLY WORKS WITH GCODE FOR NOW
         gcodeRead = open("Output/drawing.gcode", "r")
         allGcodeCommands = gcodeRead.readlines()
@@ -510,36 +510,46 @@ class ImageProcessor:
 
     # note: work in progress
     # note: this function only works on gcode, not turtle yet
-    # to be called after gcodePurge, lineJoiner, duplicateEraser
+    # to be called after gcodePurge, redundancyRemover, duplicateEraser
     # tries to connect chains whose endpoints are close to each other
     def nearestNeighbor(self, proximity):
         # 1. find endpoints
-        #       a. add endpoint at beginning and end of command set if there arent already
         # 2. find coordinates at endpoints
         # 3. for first two coordinates, find the closest other coordiante and see if it is within proximity (proximity should be pretty small)
         #       a. if within proximity, join the chains;
         #       b. then check closest endpoints to the newly formed larger chain's own endpoints
         #       c. repeat until no other endpoint is within proximity of the endpoints of the large main chain
 
-
         # helper function to find endpoints
-        # returns list of pairs of endpoint line numbers
-        def findProximity():
-            # first, finds endpoints of chains
-            allGcodeCommands = open("Output/drawing.gcode", "r").readlines()
-            thisGcodeCommand = allGcodeCommands[0]
-            thisGcodeCommandHeight = int((((thisGcodeCommand.strip("\n")).split(" "))[-1]).strip("Z"))
-            startIndicies = []
-            endIndicies = []
-            thisEndpoint = [-1, -2]
-            lineIndex = 0
+        # returns two lists of endpoints:
+        # first list is lowering/start-to-draw points
+        # second list is raising/stop-drawing points
+        def endpointFinder():
+            gcodeRead = open("Output/drawing.gcode", "r")
+            allGcodeCommands = gcodeRead.readlines()
 
-            #print(thisGcodeCommandHeight == 5)
-            #print(thisEndpoint[1])
+            # indicies are integers, points are [x, y], [x, y], [x, y], ...
+            loweringIndicies = []
+            raisingIndicies = []
 
-            print(allGcodeCommands[0])
-            print(allGcodeCommands[-1])
-            return 
+            # go through the valid commands and search for pairs of lowerings and raisings (segments)
+            for index in range(4, len(allGcodeCommands)-2 ):
+                thisGcodeCommand = allGcodeCommands[index]
+                thisGcodeCommandset = (thisGcodeCommand.strip("\n")).split(" ")
 
-        findProximity()
-        return
+                if( thisGcodeCommandset[-1]=="Z"+str(OPERATING_HEIGHT) ):
+                    loweringIndicies.append(index)
+                elif( thisGcodeCommandset[-1]=="Z"+str(RETRACT_HEIGHT) ):
+                    raisingIndicies.append(index)
+            
+            gcodeRead.close()
+
+            output = [loweringIndicies, raisingIndicies]
+            return output
+        
+        endpointFinderOutput = endpointFinder()
+        loweringIndicies = endpointFinderOutput[0]
+        raisingIndicies = endpointFinderOutput[1]
+
+        print(len(loweringIndicies))
+        print(len(raisingIndicies))
