@@ -94,7 +94,6 @@ def submit():
         Laplacian_Adj()
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
         After_Changes()
-    
     # NOT deprecated
     # to be used after ...to_Gcode() function
     def After_Changes():

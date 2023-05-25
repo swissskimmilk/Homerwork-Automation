@@ -555,9 +555,6 @@ class ImageProcessor:
         allGcodeCommands = gcodeRead.readlines()
         gcodeRead.close()
 
-        # use to doublecheck at the end that everyhting was only re-arranged and that nothing was deteleted or added
-        originalGcodeSize = len(allGcodeCommands)
-
         # go through all segments, starting at the end of the first segment and ending before the two last commands...
         toWrite = []
         for index in range(0, raisingIndicies[0]+1):
@@ -632,7 +629,7 @@ class ImageProcessor:
 
                 toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]-1])
                 toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]])
-            elif( closestEndpointType == "rasising" ):
+            elif( closestEndpointType == "raising" ):
                 # flip then connect; connect backwards
                 # (write last endpoint, then middle backwards, then first endpoint)
                 toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]-1])
@@ -650,10 +647,6 @@ class ImageProcessor:
 
         toWrite.append(allGcodeCommands[len(allGcodeCommands)-2])
         toWrite.append(allGcodeCommands[len(allGcodeCommands)-1])
-
-        # doublecheck that everyhting was only re-arranged and that nothing was deteleted or added
-        currentGcodeSize = len(toWrite)
-        print("Is the Gcode file the same size?: ", originalGcodeSize==currentGcodeSize)
         
         # wipe and write
         gcodeWrite = open("Output/drawing.gcode", "w")
