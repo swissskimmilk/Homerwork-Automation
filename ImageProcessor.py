@@ -512,7 +512,7 @@ class ImageProcessor:
     # note: this function only works on gcode, not turtle yet
     # to be called after gcodePurge, redundancyRemover, duplicateEraser
     # tries to connect chains whose endpoints are close to each other
-    def nearestNeighbor(self, proximity):
+    def nearestNeighbor(self):
         # 1. find endpoints
         # 2. find coordinates at endpoints
         # 3. for first two coordinates, find the closest other coordiante and see if it is within proximity (proximity should be pretty small)
@@ -551,5 +551,112 @@ class ImageProcessor:
         loweringIndicies = endpointFinderOutput[0]
         raisingIndicies = endpointFinderOutput[1]
 
-        print(len(loweringIndicies))
-        print(len(raisingIndicies))
+        gcodeRead = open("Output/drawing.gcode", "r")
+        allGcodeCommands = gcodeRead.readlines()
+        gcodeRead.close()
+
+        # use to doublecheck at the end that everyhting was only re-arranged and that nothing was deteleted or added
+        originalGcodeSize = len(allGcodeCommands)
+
+        # go through all segments, starting at the end of the first segment and ending before the two last commands...
+        toWrite = []
+        for index in range(0, raisingIndicies[0]+1):
+            toWrite.append(allGcodeCommands[index])
+
+        del(loweringIndicies[0])
+        del(raisingIndicies[0])
+
+        # search through the remaining segments to find the closest endpoint
+        while( len(raisingIndicies)>0 and len(loweringIndicies)>0 ):
+            
+            # returns type of the closest endpoint to this endpoint (if it is a lowering or a raising) and the index where it is at
+            def findClosestEndpoint(thisCommand):
+
+                # finds distance between two commands
+                def commandDist(commandOne, commandTwo):
+                    commandOneCommandSet = (commandOne.strip("\n")).split(" ")
+                    commandOnePoint = [float(commandOneCommandSet[1].strip("X")), float(commandOneCommandSet[2].strip("Y"))]
+
+                    commandTwoCommandSet = (commandTwo.strip("\n")).split(" ")
+                    commandTwoPoint = [float(commandTwoCommandSet[1].strip("X")), float(commandTwoCommandSet[2].strip("Y"))]
+
+                    return math.dist(commandOnePoint, commandTwoPoint)
+                    
+
+                # find closest lowering, closest raising and return index and type of the closer one
+
+                closestLoweringIndex = 0
+                shortestDistanceToLowering = commandDist(thisCommand, allGcodeCommands[loweringIndicies[0]-1])
+                for index in range(1, len(loweringIndicies)):
+                    thisDistanceToLowering = commandDist(thisCommand, allGcodeCommands[loweringIndicies[index]-1])
+                    if(thisDistanceToLowering < shortestDistanceToLowering):
+                        shortestDistanceToLowering = thisDistanceToLowering
+                        closestLoweringIndex = index
+
+                closestRaisingIndex = 0
+                shortestDistanceToRaising = commandDist(thisCommand, allGcodeCommands[raisingIndicies[0]-1])
+                for index in range(1, len(raisingIndicies)):
+                    thisDistanceToRaising = commandDist(thisCommand, allGcodeCommands[raisingIndicies[index]-1])
+                    if(thisDistanceToRaising < shortestDistanceToRaising):
+                        shortestDistanceToRaising = thisDistanceToRaising
+                        closestRaisingIndex = index
+
+                # find closest lowering, closest raising and return index and type of the closer one
+                closestEndpointType = ""
+                closestEndpointIndex = -1
+
+                if(shortestDistanceToLowering <= shortestDistanceToRaising):
+                    closestEndpointType = "lowering"
+                    closestEndpointIndex = closestLoweringIndex
+                elif(shortestDistanceToRaising <= shortestDistanceToLowering):
+                    closestEndpointType = "raising"
+                    closestEndpointIndex = closestRaisingIndex
+
+                return [closestEndpointType, closestEndpointIndex]
+
+            # endpoint to compare to is last element of toWrite; coordinates is one before that
+            thisCommand = toWrite[-2]
+
+            closestEndpoint = findClosestEndpoint(thisCommand)
+            closestEndpointType = closestEndpoint[0]
+            closestEndpointIndex = closestEndpoint[1]
+
+            if( closestEndpointType == "lowering" ):
+                # connect normally
+                # (write first endpoint, then middle, then last endpoint)
+                toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]-1])
+                toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]])
+
+                for index in range (loweringIndicies[closestEndpointIndex]+1, raisingIndicies[closestEndpointIndex]-1):
+                    toWrite.append(allGcodeCommands[index])
+
+                toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]-1])
+                toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]])
+            elif( closestEndpointType == "rasising" ):
+                # flip then connect; connect backwards
+                # (write last endpoint, then middle backwards, then first endpoint)
+                toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]-1])
+                toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]])
+
+                for index in range (raisingIndicies[closestEndpointIndex]-2, loweringIndicies[closestEndpointIndex], -1):
+                    toWrite.append(allGcodeCommands[index])
+
+                toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]-1])
+                toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]])
+            
+            # mark that the segment has been used by deleting it from the pool of remaining segments
+            del(loweringIndicies[closestEndpointIndex])
+            del(raisingIndicies[closestEndpointIndex])
+
+        toWrite.append(allGcodeCommands[len(allGcodeCommands)-2])
+        toWrite.append(allGcodeCommands[len(allGcodeCommands)-1])
+
+        # doublecheck that everyhting was only re-arranged and that nothing was deteleted or added
+        currentGcodeSize = len(toWrite)
+        print("Is the Gcode file the same size?: ", originalGcodeSize==currentGcodeSize)
+        
+        # wipe and write
+        gcodeWrite = open("Output/drawing.gcode", "w")
+        for index in range(len(toWrite)):
+            gcodeWrite.write(toWrite[index])
+        gcodeWrite.close()
