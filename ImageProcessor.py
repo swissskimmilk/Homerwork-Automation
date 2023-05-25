@@ -632,19 +632,21 @@ class ImageProcessor:
             elif( closestEndpointType == "raising" ):
                 # flip then connect; connect backwards
                 # (write last endpoint, then middle backwards, then first endpoint)
+                # also turn last endpoint raise to a lower and first endpoint lower to a raise
                 toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]-1])
-                toWrite.append(allGcodeCommands[raisingIndicies[closestEndpointIndex]])
+                toWrite.append("G1 Z"+str(OPERATING_HEIGHT)+"\n")
 
                 for index in range (raisingIndicies[closestEndpointIndex]-2, loweringIndicies[closestEndpointIndex], -1):
                     toWrite.append(allGcodeCommands[index])
 
                 toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]-1])
-                toWrite.append(allGcodeCommands[loweringIndicies[closestEndpointIndex]])
+                toWrite.append("G1 Z"+str(RETRACT_HEIGHT)+"\n")
             
             # mark that the segment has been used by deleting it from the pool of remaining segments
             del(loweringIndicies[closestEndpointIndex])
             del(raisingIndicies[closestEndpointIndex])
 
+        # last two commands should be ignored by algorithm
         toWrite.append(allGcodeCommands[len(allGcodeCommands)-2])
         toWrite.append(allGcodeCommands[len(allGcodeCommands)-1])
         
