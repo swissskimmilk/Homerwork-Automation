@@ -12,7 +12,9 @@ gaussianK = (1 / 16, 2 / 16, 1 / 16, 2 / 16, 4 / 16, 2 / 16, 1 / 16, 2 / 16, 1 /
 lapAdjK = (0, 1, 0, 1, -4, 1, 0, 1, 0)
 lapAllK = (-1, -1, -1, -1, 8, -1, -1, -1, -1)
 
-RETRACT_HEIGHT = 1
+maxGapSize = 3
+
+RETRACT_HEIGHT = 0.5
 OPERATING_HEIGHT = 0
 # retract extra high up at the end in order to avoid hitting the clips while homing
 AVOID_CLIP_HEIGHT = 10
@@ -356,9 +358,9 @@ class ImageProcessor:
     # preconditions:
     #    first five gcode commands are: homing, feedrate, first raising, going to first point coordinate, Z{OPERATING_HEIGHT} respectively
     #    last two gcode commands are: Z{RETRACT_HEIGHT}, extra raising, homing, repectively
-    def gcodePurge(self, minChainLength):
+    def gcodePurge(self):
 
-        def smallGapPurge(minChainLength):
+        def smallGapPurge():
             gcodeRead = open("Output/drawing.gcode", "r")
             allGcodeCommands = gcodeRead.readlines()
 
@@ -385,7 +387,7 @@ class ImageProcessor:
             # find the size of each gap, delete gap (let the pen write over it) if gap is too small
             for index in range(len(raisingIndicies)):
                 gapSize = math.dist(raisingPoints[index], loweringPoints[index])
-                if(gapSize<minChainLength):
+                if(gapSize<maxGapSize):
                     # set the lift and lower commands to "TODELETE" now and delete later
                     allGcodeCommands[raisingIndicies[index]] = "TODELETE"
                     allGcodeCommands[loweringIndicies[index]] = "TODELETE"
@@ -401,9 +403,9 @@ class ImageProcessor:
                 gcodeWrite.write(command)
             gcodeWrite.close()
 
-        smallGapPurge(minChainLength)
+        smallGapPurge()
 
-        def smallSegmentPurge(minChainLength):
+        def smallSegmentPurge():
             gcodeRead = open("Output/drawing.gcode", "r")
             allGcodeCommands = gcodeRead.readlines()
 
@@ -424,7 +426,7 @@ class ImageProcessor:
             # find the size of each segment, delete segment (let the pen skip it by connecting the two gaps around it) if segment is too small
             for index in range(len(raisingIndicies)):
                 segmentSize = (raisingIndicies[index]-loweringIndicies[index]) - 1
-                if(segmentSize<minChainLength):
+                if(segmentSize<maxGapSize):
                     # set the segment and first gap commands to "TODELETE" now and delete later
                     for i in range(loweringIndicies[index]-1, raisingIndicies[index]+1):
                         allGcodeCommands[i] = "TODELETE"
@@ -440,7 +442,7 @@ class ImageProcessor:
                 gcodeWrite.write(command)
             gcodeWrite.close()
 
-        smallSegmentPurge(minChainLength)
+        # smallSegmentPurge()
 
     
     # joins smaller lines into larger lines

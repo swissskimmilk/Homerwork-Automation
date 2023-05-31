@@ -98,12 +98,13 @@ def submit():
     def Lap_All_to_GCode():
         Laplacian_All()
         imageProcessor.toGCode(minChainLength, xOffset, yOffset, paperWidth, paperHeight)
+        #imageProcessor.gcodePurge()
     # Deprecated 
     def Lap_Adj_to_GCode_plus_purge():
         Lap_Adj_to_GCode()
 
         # note: dont remove gcodePurge, it now has extra functionality
-        imageProcessor.gcodePurge(minChainLength)
+        imageProcessor.gcodePurge()
 
         imageProcessor.lineJoiner()
 
@@ -155,14 +156,6 @@ processingHeader.grid(column=0, row=2, columnspan=2, padx=5, pady=10)
 imageMenu = ttk.Button(window, style="", text="Select image", command=updateInputImage)
 imageMenu.grid(column=0, row=3, padx=5, pady=5)
 
-treatments = [
-    "BW",
-    "Gaussian",
-    "Laplacian Adj",
-    "Laplacian All",
-    "Lap Adj to GCode",
-    "Lap Adj to GCode plus purge",
-]
 treatmentSelection = tk.StringVar()
 treatmentMenu = ttk.OptionMenu(
     window,
