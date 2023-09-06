@@ -8,3 +8,8 @@ In order to use the Homerwork Automation product, you will need:
 
 Product created by Aidan, Ronan, Anton, and John. 
 Software created by Aidan, Ronan, and John
+
+See attached files for examples. 
+
+![IMG_0029](https://github.com/swissskimmilk/Homerwork-Automation/assets/64725899/e22a7e84-98d5-4627-8f50-bc3675516cb4)
+![IMG_9753](https://github.com/swissskimmilk/Homerwork-Automation/assets/64725899/b808d2e4-2116-4540-946c-7117b00cd3fd)
